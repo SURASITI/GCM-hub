@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import React from 'react';
-import { X, Upload, Loader2, Edit3, Trash2, Sparkles } from 'lucide-react';
+import { X, Upload, Loader2, Edit3, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useProjects } from '../context/ProjectContext';
 import { CATEGORIES } from '../types';
@@ -300,18 +300,13 @@ export default function NewProjectModal() {
                       placeholder="Paste image URL..."
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
                     />
-                    <div className="mt-2 flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                         <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
-                         <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
-                           {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                           {isProcessingImage ? 'Optimizing...' : 'Upload File'}
-                           <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={isProcessingImage} />
-                         </label>
-                       </div>
-                       <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                         <Sparkles className="w-3 h-3" /> Auto-resized
-                       </span>
+                    <div className="mt-2 flex items-center gap-2">
+                       <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
+                       <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+                         {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                         {isProcessingImage ? 'Optimizing...' : 'Upload File'}
+                         <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={isProcessingImage} />
+                       </label>
                     </div>
                   </div>
                   {formData.thumbnail && (
@@ -333,18 +328,13 @@ export default function NewProjectModal() {
                       placeholder="Paste image URL (or leave blank to use default)..."
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
                     />
-                    <div className="mt-2 flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                         <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
-                         <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
-                           {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                           {isProcessingImage ? 'Optimizing...' : 'Upload Avatar'}
-                           <input type="file" className="hidden" accept="image/*" onChange={handleOwnerAvatarFileChange} disabled={isProcessingImage} />
-                         </label>
-                       </div>
-                       <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                         <Sparkles className="w-3 h-3" /> Auto-resized
-                       </span>
+                    <div className="mt-2 flex items-center gap-2">
+                       <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
+                       <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+                         {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                         {isProcessingImage ? 'Optimizing...' : 'Upload Avatar'}
+                         <input type="file" className="hidden" accept="image/*" onChange={handleOwnerAvatarFileChange} disabled={isProcessingImage} />
+                       </label>
                     </div>
                   </div>
                   {formData.ownerAvatar && (

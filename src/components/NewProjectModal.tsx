@@ -5,14 +5,16 @@
 
 import { useState, useEffect } from 'react';
 import React from 'react';
-import { X, Upload, Loader2, Edit3, Trash2 } from 'lucide-react';
+import { X, Upload, Loader2, Edit3, Trash2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useProjects } from '../context/ProjectContext';
 import { CATEGORIES } from '../types';
+import { compressImage } from '../lib/imageCompressor';
 
 export default function NewProjectModal() {
   const { isModalOpen, setIsModalOpen, addProject, editingProject, setEditingProject, updateProject, deleteProject, user } = useProjects();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -69,25 +71,35 @@ export default function NewProjectModal() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, thumbnail: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      setIsProcessingImage(true);
+      setSubmitError(null);
+      try {
+        const compressed = await compressImage(file, { maxWidth: 600, maxHeight: 600, quality: 0.82 });
+        setFormData((prev) => ({ ...prev, thumbnail: compressed }));
+      } catch (error) {
+        console.error("Error compressing thumbnail:", error);
+      } finally {
+        setIsProcessingImage(false);
+      }
     }
   };
 
-  const handleOwnerAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOwnerAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, ownerAvatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      setIsProcessingImage(true);
+      setSubmitError(null);
+      try {
+        const compressed = await compressImage(file, { maxWidth: 200, maxHeight: 200, quality: 0.85 });
+        setFormData((prev) => ({ ...prev, ownerAvatar: compressed }));
+      } catch (error) {
+        console.error("Error compressing owner avatar:", error);
+      } finally {
+        setIsProcessingImage(false);
+      }
     }
   };
 
@@ -99,15 +111,35 @@ export default function NewProjectModal() {
     setSubmitError(null);
     
     try {
+      // Auto-compress base64 images to guarantee Firestore document size <= 1MB
+      let finalThumbnail = formData.thumbnail;
+      let finalOwnerAvatar = formData.ownerAvatar;
+
+      if (finalThumbnail && finalThumbnail.startsWith('data:image/')) {
+        try {
+          finalThumbnail = await compressImage(finalThumbnail, { maxWidth: 600, maxHeight: 600, quality: 0.82 });
+        } catch (err) {
+          console.warn("Failed to re-compress thumbnail, using original:", err);
+        }
+      }
+
+      if (finalOwnerAvatar && finalOwnerAvatar.startsWith('data:image/')) {
+        try {
+          finalOwnerAvatar = await compressImage(finalOwnerAvatar, { maxWidth: 200, maxHeight: 200, quality: 0.85 });
+        } catch (err) {
+          console.warn("Failed to re-compress avatar, using original:", err);
+        }
+      }
+
       if (editingProject) {
         await updateProject(editingProject.id, {
           title: formData.title,
           team: formData.team,
           category: formData.category,
           description: formData.description,
-          thumbnail: formData.thumbnail || 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?auto=format&fit=crop&q=80&w=400&h=250',
+          thumbnail: finalThumbnail || 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?auto=format&fit=crop&q=80&w=400&h=250',
           projectUrl: formData.projectUrl,
-          ownerAvatar: formData.ownerAvatar || user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.team || 'User')}`,
+          ownerAvatar: finalOwnerAvatar || user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.team || 'User')}`,
         });
         setEditingProject(null);
         setIsModalOpen(false);
@@ -117,9 +149,9 @@ export default function NewProjectModal() {
           team: formData.team,
           category: formData.category,
           description: formData.description,
-          thumbnail: formData.thumbnail || 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?auto=format&fit=crop&q=80&w=400&h=250',
+          thumbnail: finalThumbnail || 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?auto=format&fit=crop&q=80&w=400&h=250',
           projectUrl: formData.projectUrl,
-          ownerAvatar: formData.ownerAvatar || user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.team || 'User')}`,
+          ownerAvatar: finalOwnerAvatar || user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.team || 'User')}`,
         });
       }
     } catch (err: any) {
@@ -268,13 +300,18 @@ export default function NewProjectModal() {
                       placeholder="Paste image URL..."
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
                     />
-                    <div className="mt-2 flex items-center gap-2">
-                       <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
-                       <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
-                         <Upload className="w-3 h-3" />
-                         Upload File
-                         <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                       </label>
+                    <div className="mt-2 flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                         <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
+                         <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+                           {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                           {isProcessingImage ? 'Optimizing...' : 'Upload File'}
+                           <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={isProcessingImage} />
+                         </label>
+                       </div>
+                       <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                         <Sparkles className="w-3 h-3" /> Auto-resized
+                       </span>
                     </div>
                   </div>
                   {formData.thumbnail && (
@@ -296,13 +333,18 @@ export default function NewProjectModal() {
                       placeholder="Paste image URL (or leave blank to use default)..."
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
                     />
-                    <div className="mt-2 flex items-center gap-2">
-                       <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
-                       <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
-                         <Upload className="w-3 h-3" />
-                         Upload Avatar
-                         <input type="file" className="hidden" accept="image/*" onChange={handleOwnerAvatarFileChange} />
-                       </label>
+                    <div className="mt-2 flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                         <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
+                         <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+                           {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                           {isProcessingImage ? 'Optimizing...' : 'Upload Avatar'}
+                           <input type="file" className="hidden" accept="image/*" onChange={handleOwnerAvatarFileChange} disabled={isProcessingImage} />
+                         </label>
+                       </div>
+                       <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                         <Sparkles className="w-3 h-3" /> Auto-resized
+                       </span>
                     </div>
                   </div>
                   {formData.ownerAvatar && (

@@ -1,0 +1,8 @@
+{
+  "name": "GCM hub",
+  "description": "GCM hub - แพลตฟอร์มรวบรวมแนวคิดเทคโนโลยีและโครงการนวัตกรรมดิจิทัลภายในองค์กร",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

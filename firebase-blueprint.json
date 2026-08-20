@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "An innovation project submitted to the hub",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Project Title" },
+        "team": { "type": "string", "description": "Team Name" },
+        "category": { "type": "string", "description": "Category Code" },
+        "thumbnail": { "type": "string", "description": "Image URL or Data URL" },
+        "votes": { "type": "integer", "description": "Number of upvotes" },
+        "comments": { "type": "integer", "description": "Comment count cache" },
+        "description": { "type": "string", "description": "Detailed description" },
+        "projectUrl": { "type": "string", "description": "External project link" },
+        "ownerId": { "type": "string", "description": "UID of the creator" },
+        "ownerName": { "type": "string", "description": "Name of the creator" },
+        "ownerAvatar": { "type": "string", "description": "Avatar URL of the creator" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "team", "category", "description", "ownerId", "createdAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A comment on a project",
+      "type": "object",
+      "properties": {
+        "userName": { "type": "string" },
+        "userAvatar": { "type": "string" },
+        "text": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userName", "text", "ownerId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Collection of all innovation projects"
+    },
+    "/projects/{projectId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Subcollection of comments for a project"
+    }
+  }
+}

@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isOwner(ownerId) { return isSignedIn() && request.auth.uid == ownerId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // Admin check - Using email from runtime metadata
+    function isAdmin() { 
+      return isSignedIn() && request.auth.token.email == 'Mosy_nicky@hotmail.com';
+    }
+
+    // --- Entity Validations ---
+    
+    function isValidProjectOnCreate(data) {
+      return data.keys().hasAll(['title', 'team', 'category', 'description', 'ownerId', 'createdAt'])
+        && data.title is string && data.title.size() <= 200
+        && data.team is string && data.team.size() <= 100
+        && data.category is string && data.category.size() <= 20
+        && data.description is string && data.description.size() <= 5000
+        && data.ownerId == request.auth.uid
+        && data.createdAt == request.time;
+    }
+
+    function isValidProjectOnUpdate(data) {
+      return data.keys().hasAll(['title', 'team', 'category', 'description', 'ownerId', 'createdAt'])
+        && data.title is string && data.title.size() <= 200
+        && data.team is string && data.team.size() <= 100
+        && data.category is string && data.category.size() <= 20
+        && data.description is string && data.description.size() <= 5000;
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['userName', 'userAvatar', 'text', 'ownerId', 'createdAt'])
+        && data.userName is string && data.userName.size() <= 100
+        && data.text is string && data.text.size() <= 1000
+        && data.ownerId == request.auth.uid
+        && data.createdAt == request.time;
+    }
+
+    // --- Match Blocks ---
+
+    match /projects/{projectId} {
+      allow read: if true;
+      
+      allow create: if isSignedIn() 
+        && isValidId(projectId)
+        && isValidProjectOnCreate(incoming());
+        
+      allow update: if 
+        // 1. Full updates for Owner or Admin
+        (isSignedIn() && (
+          (isOwner(existing().ownerId) 
+            && isValidProjectOnUpdate(incoming())
+            && incoming().ownerId == existing().ownerId
+            && incoming().createdAt == existing().createdAt
+          ) ||
+          isAdmin()
+        )) ||
+        // 2. Others / Guests can vote, unlike, or favorite
+        (incoming().diff(existing()).affectedKeys().hasOnly(['votes', 'votedUserIds', 'favoriteCount', 'favoritedUserIds'])) ||
+        // 3. Logged in users can add/read comments
+        (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['comments', 'commentsList']));
+        
+      allow delete: if isSignedIn() && (isOwner(existing().ownerId) || isAdmin());
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isValidComment(incoming()) && isValidId(commentId);
+        allow update, delete: if isSignedIn() && (isOwner(existing().ownerId) || isAdmin());
+      }
+    }
+    
+    // Persistence for admin/test connection
+    match /test/connection {
+      allow read: if true;
+    }
+    
+    match /statistics/{statDoc} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -115,7 +115,7 @@ export default function Sidebar() {
             className="w-full mb-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white rounded-xl shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 transition-all font-bold"
           >
             <Plus className="w-5 h-5" />
-            <span>New Project</span>
+            <span>New App</span>
           </button>
 
           {user && (

@@ -211,7 +211,7 @@ export default function NewProjectModal() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-2xl font-bold text-slate-800">
-                  {editingProject ? 'Edit Project' : 'Launch New Project'}
+                  {editingProject ? 'Edit App' : 'Launch New App'}
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
                   {editingProject ? 'Make changes to your innovation' : 'Share your innovation with the company'}
@@ -237,7 +237,7 @@ export default function NewProjectModal() {
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Project Title</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">App Title</label>
                   <input
                     type="text"
                     value={formData.title}
@@ -278,7 +278,7 @@ export default function NewProjectModal() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Project URL (Optional)</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">App URL (Optional)</label>
                   <input
                     type="url"
                     value={formData.projectUrl}
@@ -290,7 +290,7 @@ export default function NewProjectModal() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Project Picture</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">App Picture</label>
                 <div className="flex gap-4 items-start">
                   <div className="flex-1">
                     <input
@@ -366,7 +366,7 @@ export default function NewProjectModal() {
                     onClick={handleDelete}
                     disabled={isSubmitting}
                     className="px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 border border-rose-200 text-sm disabled:opacity-50"
-                    title="Delete Project"
+                    title="Delete App"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>ลบแอป (Delete)</span>
@@ -397,7 +397,7 @@ export default function NewProjectModal() {
                     ) : (
                       <>
                         {editingProject ? <Edit3 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
-                        {editingProject ? 'Save Changes' : 'Publish Project'}
+                        {editingProject ? 'Save Changes' : 'Publish App'}
                       </>
                     )}
                   </button>

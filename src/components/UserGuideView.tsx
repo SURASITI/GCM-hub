@@ -100,16 +100,16 @@ export default function UserGuideView() {
     {
       step: '04',
       title: 'เพิ่มแอปพลิเคชันใหม่',
-      titleEn: 'Add New Project',
+      titleEn: 'Add New App',
       color: 'from-purple-500 to-indigo-600',
       bgColor: 'bg-purple-50/60 border-purple-100',
       badgeColor: 'bg-purple-600 text-white',
-      desc: 'เข้าสู่ระบบแล้วกดปุ่ม "New Project" เพื่อแบ่งปันแอปของคุณแก่ทีมงาน',
+      desc: 'เข้าสู่ระบบแล้วกดปุ่ม "New App" เพื่อแบ่งปันแอปของคุณแก่ทีมงาน',
       visual: (
         <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center justify-center">
           <div className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-xs shadow-md shadow-indigo-200 flex items-center gap-2">
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>New Project</span>
+            <span>New App</span>
           </div>
         </div>
       )

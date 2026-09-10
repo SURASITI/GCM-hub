@@ -34,7 +34,7 @@ export default function FavoritesView() {
             <h2 className="text-2xl font-bold text-slate-800">Favorites / รายการที่ชื่นชอบ</h2>
           </div>
           <p className="text-slate-500 text-sm mt-1">
-            รวมโครงการนวัตกรรมที่คุณกดชื่นชอบไว้ เพื่อให้เข้าถึงและติดตามความคืบหน้าได้ง่ายขึ้น
+            รวมแอปพลิเคชันที่คุณกดชื่นชอบไว้ เพื่อให้เข้าถึงและติดตามความคืบหน้าได้ง่ายขึ้น
           </p>
         </div>
 
@@ -68,7 +68,7 @@ export default function FavoritesView() {
           </div>
           <h3 className="text-lg font-bold text-slate-800 mb-2">ยังไม่มีรายการชื่นชอบ</h3>
           <p className="text-slate-500 text-sm max-w-md mb-6 leading-relaxed">
-            คุณสามารถกดสัญลักษณ์ระฆังหัวใจ <span className="font-bold text-rose-500 hover:scale-110 cursor-default">“ชื่นชอบ”</span> ในหน้ารวมโครงการ เพื่อเก็บรวบรวมโครงการนวัตกรรมที่คุณสนใจมาแสดงในหน้านี้ได้อย่างสะดวก
+            คุณสามารถกดสัญลักษณ์ระฆังหัวใจ <span className="font-bold text-rose-500 hover:scale-110 cursor-default">“ชื่นชอบ”</span> ในหน้ารวมแอป เพื่อเก็บรวบรวมแอปพลิเคชันที่คุณสนใจมาแสดงในหน้านี้ได้อย่างสะดวก
           </p>
         </motion.div>
       ) : filteredFavorites.length === 0 ? (

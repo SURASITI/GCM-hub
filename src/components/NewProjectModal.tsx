@@ -66,6 +66,7 @@ export default function NewProjectModal() {
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.team.trim()) newErrors.team = 'Owner name is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.projectUrl.trim()) newErrors.projectUrl = 'App URL is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -278,14 +279,17 @@ export default function NewProjectModal() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">App URL (Optional)</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">App URL</label>
                   <input
                     type="url"
                     value={formData.projectUrl}
                     onChange={(e) => setFormData({ ...formData, projectUrl: e.target.value })}
                     placeholder="https://project-demo.com"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                    className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none ${
+                        errors.projectUrl ? 'border-red-300 bg-red-50' : 'border-slate-100'
+                    }`}
                   />
+                  {errors.projectUrl && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.projectUrl}</p>}
                 </div>
               </div>
 

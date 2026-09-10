@@ -58,7 +58,7 @@ function AppContent() {
                     </div>
                     <div className="text-left">
                       <h4 className="text-md font-bold text-slate-800">Browsing as Guest | กำลังเข้าชมในฐานะผู้เยี่ยมชม</h4>
-                      <p className="text-sm text-slate-500 mt-1">Anyone can browse projects, view analytics, and cast votes! Create your company account to submit projects and leave comments.</p>
+                      <p className="text-sm text-slate-500 mt-1">Anyone can browse apps, view analytics, and cast votes! Create your company account to submit apps and leave comments.</p>
                     </div>
                   </div>
                   <button 

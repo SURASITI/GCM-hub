@@ -83,7 +83,7 @@ export const MOCK_ACTIVITIES: Activity[] = [
 ];
 
 export const MOCK_STATS: Stat[] = [
-  { label: 'Total Projects', value: '248', change: '+12%', isPositive: true },
+  { label: 'Total Apps', value: '248', change: '+12%', isPositive: true },
   { label: 'Platform Votes', value: '14.2k', change: '+24%', isPositive: true },
   { label: 'Idea Conversion', value: '18%', change: '-2%', isPositive: false },
   { label: 'Active Teams', value: '42', change: '+4', isPositive: true }

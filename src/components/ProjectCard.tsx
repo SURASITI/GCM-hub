@@ -152,7 +152,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                 exit={{ opacity: 0, scale: 0.8 }}
                 onClick={handleEdit}
                 className="p-2.5 bg-white text-slate-800 rounded-xl shadow-lg hover:bg-slate-50 transition-all flex items-center gap-1.5"
-                title="Edit Project"
+                title="Edit App"
               >
                 <Edit3 className="w-4 h-4 text-indigo-600" />
               </motion.button>

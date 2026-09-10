@@ -37,7 +37,7 @@ export default function ProjectGallery() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">
-            {isMyProjects ? 'My Projects' : 'Internal Showcase'}
+            {isMyProjects ? 'My Apps' : 'Internal Showcase'}
           </h2>
           <p className="text-slate-500 text-sm mt-1">
             {isMyProjects 
@@ -75,18 +75,18 @@ export default function ProjectGallery() {
           <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mb-6">
             <Filter className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-slate-800 mb-2">No Projects Found</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">No Apps Found</h3>
           <p className="text-slate-500 text-sm max-w-sm mb-6 leading-relaxed">
             {isMyProjects 
-              ? "You haven't submitted any projects yet. Share your high-tech ideas with GCMP Hub!" 
-              : "We couldn't find any projects matching your categories or search query."}
+              ? "You haven't submitted any apps yet. Share your high-tech ideas with GCMP Hub!" 
+              : "We couldn't find any apps matching your categories or search query."}
           </p>
           {isMyProjects && (
             <button
               onClick={() => setIsModalOpen(true)}
               className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-indigo-100"
             >
-              Create Your First Project
+              Create Your First App
             </button>
           )}
         </motion.div>

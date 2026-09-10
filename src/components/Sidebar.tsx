@@ -20,7 +20,7 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', text: 'Overview' },
-  { icon: FolderKanban, label: 'My Projects', text: 'My Projects' },
+  { icon: FolderKanban, label: 'My Projects', text: 'My Apps' },
   { icon: Heart, label: 'Favorites', text: 'Favorites' },
   { icon: BookOpen, label: 'User Guide', text: 'คู่มือการใช้งาน' },
 ];

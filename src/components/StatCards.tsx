@@ -10,10 +10,10 @@ import { motion } from 'motion/react';
 export default function StatCards() {
   const { projects, totalVisits } = useProjects();
 
-  // 1. Total Projects
+  // 1. Total Apps
   const totalProjectsCount = projects.length;
 
-  // 2. Category with most projects
+  // 2. Category with most apps
   const categoryCounts: Record<string, number> = {};
   projects.forEach((p) => {
     const cat = p.category;
@@ -31,7 +31,7 @@ export default function StatCards() {
     }
   });
 
-  // 3. Project with most favorites
+  // 3. App with most favorites
   let topProjectTitle = 'ยังไม่มีข้อมูล';
   let topProjectFavorites = 0;
 
@@ -45,8 +45,8 @@ export default function StatCards() {
 
   const cards = [
     {
-      label: 'Total Projects',
-      labelTh: 'โครงการทั้งหมด',
+      label: 'Total Apps',
+      labelTh: 'แอปทั้งหมด',
       value: totalProjectsCount.toString(),
       subtext: 'Submitted & Active',
       icon: FolderKanban,
@@ -54,9 +54,9 @@ export default function StatCards() {
     },
     {
       label: 'Top Category',
-      labelTh: 'หมวดหมู่ที่มีโครงการเยอะสุด',
+      labelTh: 'หมวดหมู่ที่มีแอปเยอะสุด',
       value: topCategory,
-      subtext: maxCategoryCount > 0 ? `${maxCategoryCount} Projects` : 'No projects yet',
+      subtext: maxCategoryCount > 0 ? `${maxCategoryCount} Apps` : 'No apps yet',
       icon: Tag,
       iconColor: 'text-emerald-600 bg-emerald-50',
     },

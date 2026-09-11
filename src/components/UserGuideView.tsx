@@ -34,15 +34,6 @@ const CursorClick = ({ className = "w-6 h-6" }: { className?: string }) => (
 );
 
 export default function UserGuideView() {
-  const [copied, setCopied] = useState(false);
-  const hubUrl = "https://gcm-webhub.mosy-nicky.workers.dev/";
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(hubUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="space-y-8 animate-fade-in pb-16 max-w-7xl mx-auto">
       {/* Outer Card replicating the Infographic Poster */}
@@ -52,46 +43,7 @@ export default function UserGuideView() {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-cyan-100/50 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-100/50 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Header Section */}
-        <div className="relative z-10 mb-8 sm:mb-10">
-          {/* Logo Badge */}
-          <div className="inline-flex items-center gap-2.5 bg-slate-900 text-white px-4 py-2 rounded-2xl shadow-md mb-4">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 flex items-center justify-center shadow-sm">
-              <Globe className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-            </div>
-            <span className="text-lg font-black tracking-tight">GCMP</span>
-            <span className="px-2 py-0.5 rounded-lg bg-[#00a8e8] text-slate-950 font-black text-xs uppercase tracking-wider">
-              HUB
-            </span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-snug">
-            รวม Web App ที่พนักงานสร้าง เพื่อให้ทุกคนเข้าถึงได้ง่าย
-          </h1>
-
-          {/* URL Pill */}
-          <div className="mt-4 inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-indigo-200/90 bg-indigo-50/70 text-indigo-950 text-xs sm:text-sm font-semibold shadow-sm hover:bg-indigo-100/70 transition-colors">
-            <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">
-              <Globe className="w-3 h-3 stroke-[2.5]" />
-            </div>
-            <a 
-              href={hubUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="hover:underline text-indigo-900 font-bold"
-            >
-              {hubUrl}
-            </a>
-            <button 
-              onClick={handleCopy}
-              className="ml-1 p-1 rounded-lg hover:bg-indigo-200/60 text-indigo-600 transition-colors"
-              title="Copy URL"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        </div>
+        {/* Header Section Removed to save space */}
 
         {/* SECTION 1: เข้าใช้งาน Web App */}
         <div className="mb-10 rounded-[2rem] border-2 border-cyan-400/80 overflow-hidden shadow-md bg-white">

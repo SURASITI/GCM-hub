@@ -11,6 +11,7 @@ import ProjectGallery from './components/ProjectGallery';
 import FavoritesView from './components/FavoritesView';
 import UserGuideView from './components/UserGuideView';
 import NewProjectModal from './components/NewProjectModal';
+import QuotaBanner from './components/QuotaBanner';
 import { ProjectProvider, useProjects } from './context/ProjectContext';
 import { LogIn, Rocket, ShieldCheck, Zap } from 'lucide-react';
 
@@ -44,6 +45,7 @@ function AppContent() {
       
       <main className="lg:ml-64 ml-0 p-4 sm:p-6 md:p-8">
         <div className="max-w-[1600px] mx-auto">
+          <QuotaBanner />
           {activeTab === 'Favorites' ? (
             <FavoritesView />
           ) : activeTab === 'User Guide' ? (

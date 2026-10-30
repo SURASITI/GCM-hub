@@ -27,8 +27,12 @@ async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
+    if (error instanceof Error) {
+      if (error.message.includes('the client is offline')) {
+        console.warn("Firebase client is currently working offline.");
+      } else if (error.message.toLowerCase().includes('quota') || (error as any).code === 'resource-exhausted') {
+        console.warn("Firestore daily free read quota reached. App is serving from offline cache.");
+      }
     }
   }
 }

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FolderKanban, Tag, Heart, Activity } from 'lucide-react';
+import { FolderKanban, Tag, Heart } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 import { motion } from 'motion/react';
 
 export default function StatCards() {
-  const { projects, totalVisits } = useProjects();
+  const { projects } = useProjects();
 
   // 1. Total Apps
   const totalProjectsCount = projects.length;
@@ -71,18 +71,10 @@ export default function StatCards() {
       iconColor: 'text-rose-500 bg-rose-50',
       isLong: true,
     },
-    {
-      label: 'Hub Visits',
-      labelTh: 'จำนวนการเข้าชม GCMP Hub',
-      value: totalVisits.toLocaleString(),
-      subtext: 'Total Page Views',
-      icon: Activity,
-      iconColor: 'text-rose-600 bg-rose-50',
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
       {cards.map((card, idx) => {
         const Icon = card.icon;
         return (

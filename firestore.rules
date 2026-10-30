@@ -84,9 +84,5 @@ service cloud.firestore {
     match /test/connection {
       allow read: if true;
     }
-    
-    match /statistics/{statDoc} {
-      allow read, write: if true;
-    }
   }
 }

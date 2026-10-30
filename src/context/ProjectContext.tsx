@@ -23,11 +23,10 @@ import {
   doc, 
   serverTimestamp,
   query,
-  orderBy,
-  increment,
-  getDoc,
-  setDoc
+  orderBy
 } from 'firebase/firestore';
+
+import { FALLBACK_PROJECTS } from '../data/fallbackProjects';
 
 interface ProjectContextType {
   projects: Project[];
@@ -55,13 +54,31 @@ interface ProjectContextType {
   toggleFavorite: (id: string) => void;
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (open: boolean) => void;
-  totalVisits: number;
+  isQuotaExceeded: boolean;
+  upgradeUrl: string;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const UPGRADE_URL = 'https://console.firebase.google.com/project/gen-lang-client-0975890740/firestore/databases/ai-studio-09cb01fe-005d-46bd-a981-67c24e4715da/data?openUpgradeDialog=true';
+
+  const [projects, setProjects] = useState<Project[]>(() => {
+    try {
+      const cached = localStorage.getItem('gcmp_cached_projects_v2');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+    return FALLBACK_PROJECTS;
+  });
+
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,7 +87,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState('Overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [totalVisits, setTotalVisits] = useState(0);
+
   const [guestId, setGuestId] = useState<string>(() => {
     let gid = localStorage.getItem('gcmp_guest_id');
     if (!gid) {
@@ -110,51 +127,49 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
     const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const projectsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Project[];
-      setProjects(projectsData);
-    }, (error) => {
-      console.error("Error fetching projects", error);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    // 1) Set up listener for the total view count
-    const statsRef = doc(db, 'statistics', 'hub_stats');
-    const unsubStats = onSnapshot(statsRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setTotalVisits(docSnap.data().totalVisits || 0);
-      }
-    });
-
-    // 2) Increment view count once per session
-    const incrementVisit = async () => {
-      const hasVisited = sessionStorage.getItem('gcmp_has_visited');
-      if (!hasVisited) {
+      if (!isMounted) return;
+      if (snapshot.docs.length > 0) {
+        const projectsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Project[];
+        
+        setProjects(projectsData);
         try {
-          const docSnap = await getDoc(statsRef);
-          if (!docSnap.exists()) {
-            await setDoc(statsRef, { totalVisits: 1 });
-          } else {
-            await updateDoc(statsRef, { totalVisits: increment(1) });
-          }
-          sessionStorage.setItem('gcmp_has_visited', 'true');
-        } catch (error) {
-          console.error("Error updating visits", error);
+          localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(projectsData));
+        } catch (e) {
+          // ignore localStorage full
         }
       }
-    };
-    
-    incrementVisit();
+      setIsQuotaExceeded(false);
+      setLoading(false);
+    }, (error) => {
+      if (!isMounted) return;
+      const errMsg = error?.message || String(error);
+      const isQuota = errMsg.toLowerCase().includes('quota') || 
+                      errMsg.includes('Free daily read units') ||
+                      (error as any)?.code === 'resource-exhausted';
 
-    return () => unsubStats();
+      if (isQuota) {
+        console.warn("Firestore Quota reached: serving projects from local/fallback cache.");
+        setIsQuotaExceeded(true);
+      } else {
+        console.warn("Firestore fetch notice:", errMsg);
+      }
+      // Ensure UI finishes loading and renders from cache
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
+
 
   useEffect(() => {
     const identifier = user ? user.uid : guestId;
@@ -303,13 +318,25 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       newVotes = (project.votes || 0) + 1;
     }
     
+    // Optimistically update projects state
+    setProjects(prev => prev.map(p => {
+      if (p.id === id) {
+        return {
+          ...p,
+          votes: newVotes,
+          votedUserIds: newVotedUserIds
+        };
+      }
+      return p;
+    }));
+    
     try {
       await updateDoc(doc(db, 'projects', id), {
         votes: newVotes,
         votedUserIds: newVotedUserIds
       });
     } catch (error) {
-      console.error("Error voting", error);
+      console.warn("Could not sync vote to Firestore:", error);
     }
   };
 
@@ -327,14 +354,28 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       ownerId: user.uid
     };
 
+    const updatedCommentsList = project.commentsList ? [newComment, ...project.commentsList] : [newComment];
+    const newCommentsCount = (project.comments || 0) + 1;
+
+    // Optimistically update projects state
+    setProjects(prev => prev.map(p => {
+      if (p.id === id) {
+        return {
+          ...p,
+          comments: newCommentsCount,
+          commentsList: updatedCommentsList
+        };
+      }
+      return p;
+    }));
+
     try {
-      const commentsList = project.commentsList ? [newComment, ...project.commentsList] : [newComment];
       await updateDoc(doc(db, 'projects', id), {
-        comments: (project.comments || 0) + 1,
-        commentsList
+        comments: newCommentsCount,
+        commentsList: updatedCommentsList
       });
     } catch (error) {
-      console.error("Error commenting", error);
+      console.warn("Could not sync comment to Firestore:", error);
     }
   };
 
@@ -365,7 +406,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       toggleFavorite,
       isMobileMenuOpen,
       setIsMobileMenuOpen,
-      totalVisits
+      isQuotaExceeded,
+      upgradeUrl: UPGRADE_URL
     }}>
       {children}
     </ProjectContext.Provider>

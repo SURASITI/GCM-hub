@@ -6,14 +6,12 @@
 import { useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
-import StatCards from './components/StatCards';
 import ProjectGallery from './components/ProjectGallery';
 import FavoritesView from './components/FavoritesView';
 import UserGuideView from './components/UserGuideView';
 import NewProjectModal from './components/NewProjectModal';
 import QuotaBanner from './components/QuotaBanner';
 import { ProjectProvider, useProjects } from './context/ProjectContext';
-import { LogIn, Rocket, ShieldCheck, Zap } from 'lucide-react';
 
 function AppContent() {
   const { user, login, loading, activeTab, searchQuery } = useProjects();
@@ -71,8 +69,6 @@ function AppContent() {
                   </button>
                 </div>
               )}
-
-              {!hasSearchQuery && <StatCards />}
 
               <div className="w-full">
                 <ProjectGallery />

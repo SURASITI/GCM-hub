@@ -8,8 +8,23 @@ import { AlertTriangle, ExternalLink, X, Database, ShieldAlert } from 'lucide-re
 import { useProjects } from '../context/ProjectContext';
 
 export default function QuotaBanner() {
-  const { isQuotaExceeded, upgradeUrl } = useProjects();
-  const [isDismissed, setIsDismissed] = useState(false);
+  const { isQuotaExceeded, upgradeUrl, isAdmin } = useProjects();
+  const [isDismissed, setIsDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('gcmp_quota_banner_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    try {
+      sessionStorage.setItem('gcmp_quota_banner_dismissed', 'true');
+    } catch {
+      // ignore
+    }
+  };
 
   if (!isQuotaExceeded || isDismissed) {
     return null;
@@ -38,25 +53,33 @@ export default function QuotaBanner() {
               แอปพลิเคชันกำลังทำงานใน <strong>โหมดออฟไลน์แคช (Offline Cache)</strong> โดยแสดงผลข้อมูลแอปพลิเคชันทั้งหมด 59 รายการอย่างสมบูรณ์แบบ โควตาอ่านฟรีของ Firestore จะรีเซ็ตอัตโนมัติในวันถัดไป หรือผู้ดูแลสามารถเปิดใช้งาน Billing เพื่อใช้งานได้ไม่จำกัด
             </p>
             <div className="pt-2 flex flex-wrap items-center gap-3">
-              <a
-                href={upgradeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-sm shadow-amber-200 hover:scale-105 active:scale-95"
+              {isAdmin && (
+                <a
+                  href={upgradeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-sm shadow-amber-200 hover:scale-105 active:scale-95"
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  <span>เปิด Firebase Console เพื่ออัปเกรดฐานข้อมูล</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+              <button
+                onClick={handleDismiss}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold transition-colors"
               >
-                <Database className="w-3.5 h-3.5" />
-                <span>เปิด Firebase Console เพื่ออัปเกรดฐานข้อมูล</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+                <span>ซ่อนการแจ้งเตือนนี้</span>
+              </button>
               <span className="text-xs text-amber-700">
-                (Free daily read limit resets every 24h)
+                (โควตาจะรีเซ็ตอัตโนมัติทุก 24 ชม. ในช่วงบ่าย)
               </span>
             </div>
           </div>
         </div>
 
         <button
-          onClick={() => setIsDismissed(true)}
+          onClick={handleDismiss}
           className="text-amber-500 hover:text-amber-800 p-1.5 rounded-lg hover:bg-amber-100/50 transition-colors"
           title="ซ่อนการแจ้งเตือน"
         >

@@ -7,13 +7,13 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { CATEGORIES } from '../types';
 import ProjectCard from './ProjectCard';
 import { motion } from 'motion/react';
-import { Filter, ArrowUpDown, ChevronLeft, ChevronRight, Layers, LayoutGrid } from 'lucide-react';
+import { Filter, ArrowUpDown, ChevronLeft, ChevronRight, Layers, LayoutGrid, RefreshCw } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 
 type SortOption = 'newest' | 'votes' | 'title';
 
 export default function ProjectGallery() {
-  const { projects, searchQuery, user, activeTab, setIsModalOpen } = useProjects();
+  const { projects, searchQuery, user, activeTab, setIsModalOpen, refreshProjects, isRefreshing } = useProjects();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [currentPage, setCurrentPage] = useState(1);
@@ -153,6 +153,17 @@ export default function ProjectGallery() {
               <option value={-1}>ทั้งหมด (All)</option>
             </select>
           </div>
+
+          {/* Sync / Refresh Button */}
+          <button
+            onClick={() => refreshProjects(true)}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white border border-slate-200/80 shadow-sm text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all active:scale-95 disabled:opacity-50"
+            title="ซิงค์ข้อมูลล่าสุดจากฐานข้อมูล"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-600' : 'text-slate-400'}`} />
+            <span className="hidden sm:inline">{isRefreshing ? 'กำลังซิงค์...' : 'ซิงค์ข้อมูล'}</span>
+          </button>
         </div>
       </div>
 

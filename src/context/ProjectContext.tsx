@@ -16,6 +16,7 @@ import {
 } from '../lib/firebase';
 import { 
   collection, 
+  getDocs,
   onSnapshot, 
   addDoc, 
   deleteDoc, 
@@ -56,6 +57,9 @@ interface ProjectContextType {
   setIsMobileMenuOpen: (open: boolean) => void;
   isQuotaExceeded: boolean;
   upgradeUrl: string;
+  refreshProjects: (force?: boolean) => Promise<void>;
+  isRefreshing: boolean;
+  lastSyncedAt: Date | null;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -78,12 +82,30 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return FALLBACK_PROJECTS;
   });
 
-  const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState(() => {
+    try {
+      const blockedUntil = localStorage.getItem('gcmp_quota_blocked_until');
+      return !!(blockedUntil && Date.now() < Number(blockedUntil));
+    } catch {
+      return false;
+    }
+  });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => {
+    try {
+      const last = localStorage.getItem('gcmp_last_fetch_time');
+      return last ? new Date(Number(last)) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState('Overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -114,7 +136,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setLoading(false);
       
       // Auto-set admin based on email
       if (currentUser?.email === 'Mosy_nicky@hotmail.com') {
@@ -126,12 +147,35 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    let isMounted = true;
-    const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+  const fetchProjects = async (force: boolean = false) => {
+    // 1. If currently known to be blocked by quota today, don't hammer the server unless forced
+    if (!force) {
+      try {
+        const blockedUntil = localStorage.getItem('gcmp_quota_blocked_until');
+        if (blockedUntil && Date.now() < Number(blockedUntil)) {
+          setIsQuotaExceeded(true);
+          return;
+        }
+      } catch (e) {
+        // ignore
+      }
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!isMounted) return;
+      // 2. Check Cache TTL: if cached within last 30 minutes, skip network read (0 reads)
+      try {
+        const lastFetch = localStorage.getItem('gcmp_last_fetch_time');
+        if (lastFetch && projects.length > 0 && Date.now() - Number(lastFetch) < 30 * 60 * 1000) {
+          return;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    setIsRefreshing(true);
+
+    try {
+      const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
       if (snapshot.docs.length > 0) {
         const projectsData = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -141,34 +185,44 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         setProjects(projectsData);
         try {
           localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(projectsData));
+          localStorage.setItem('gcmp_last_fetch_time', String(Date.now()));
+          localStorage.removeItem('gcmp_quota_blocked_until');
         } catch (e) {
           // ignore localStorage full
         }
+        setLastSyncedAt(new Date());
+        setIsQuotaExceeded(false);
       }
-      setIsQuotaExceeded(false);
-      setLoading(false);
-    }, (error) => {
-      if (!isMounted) return;
+    } catch (error: any) {
       const errMsg = error?.message || String(error);
       const isQuota = errMsg.toLowerCase().includes('quota') || 
                       errMsg.includes('Free daily read units') ||
-                      (error as any)?.code === 'resource-exhausted';
+                      error?.code === 'resource-exhausted';
 
       if (isQuota) {
         console.warn("Firestore Quota reached: serving projects from local/fallback cache.");
         setIsQuotaExceeded(true);
+        // Backoff for 2 hours to avoid hammering the server
+        try {
+          localStorage.setItem('gcmp_quota_blocked_until', String(Date.now() + 2 * 60 * 60 * 1000));
+        } catch (e) {
+          // ignore
+        }
       } else {
         console.warn("Firestore fetch notice:", errMsg);
       }
-      // Ensure UI finishes loading and renders from cache
-      setLoading(false);
-    });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
+  useEffect(() => {
+    fetchProjects(false);
   }, []);
+
+  const refreshProjects = async (force: boolean = true) => {
+    await fetchProjects(force);
+  };
 
 
   useEffect(() => {
@@ -257,7 +311,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await addDoc(collection(db, 'projects'), {
+      const docData = {
         ...newProjectData,
         votes: 0,
         comments: 0,
@@ -266,7 +320,29 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         ownerAvatar: newProjectData.ownerAvatar || user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+      };
+      const docRef = await addDoc(collection(db, 'projects'), docData);
+
+      // Optimistically update local state & cache
+      const newCreated: Project = {
+        id: docRef.id,
+        ...newProjectData,
+        votes: 0,
+        comments: 0,
+        ownerId: user.uid,
+        ownerName: user.displayName || 'Anonymous',
+        ownerAvatar: newProjectData.ownerAvatar || user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setProjects(prev => {
+        const updated = [newCreated, ...prev];
+        try {
+          localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
       });
+
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error adding project", error);
@@ -283,6 +359,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         ...data,
         updatedAt: serverTimestamp()
       });
+
+      // Optimistically update local state & cache
+      setProjects(prev => {
+        const updated = prev.map(p => p.id === id ? { ...p, ...data, updatedAt: new Date().toISOString() } : p);
+        try {
+          localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
     } catch (error) {
       console.error("Error updating project", error);
       throw error;
@@ -292,6 +377,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const deleteProject = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'projects', id));
+
+      // Optimistically update local state & cache
+      setProjects(prev => {
+        const updated = prev.filter(p => p.id !== id);
+        try {
+          localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
     } catch (error) {
       console.error("Error deleting project", error);
     }
@@ -407,7 +501,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       isMobileMenuOpen,
       setIsMobileMenuOpen,
       isQuotaExceeded,
-      upgradeUrl: UPGRADE_URL
+      upgradeUrl: UPGRADE_URL,
+      refreshProjects,
+      isRefreshing,
+      lastSyncedAt
     }}>
       {children}
     </ProjectContext.Provider>

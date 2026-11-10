@@ -217,7 +217,24 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchProjects(false);
+    // Check if this specific browser tab/window has synced once
+    let shouldSyncNewWindow = false;
+    try {
+      const windowSynced = sessionStorage.getItem('gcmp_window_synced_v2');
+      if (!windowSynced) {
+        shouldSyncNewWindow = true;
+        sessionStorage.setItem('gcmp_window_synced_v2', 'true');
+      }
+    } catch {
+      shouldSyncNewWindow = true;
+    }
+
+    if (shouldSyncNewWindow) {
+      // Auto-sync 1 time on newly opened window/tab so user doesn't have to manually click sync
+      fetchProjects(true);
+    } else {
+      fetchProjects(false);
+    }
   }, []);
 
   const refreshProjects = async (force: boolean = true) => {

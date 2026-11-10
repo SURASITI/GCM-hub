@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Bell, Search, Shield, ShieldAlert, LogIn, LogOut, Loader2, Menu, Share2 } from 'lucide-react';
+import { Bell, Search, Shield, ShieldAlert, LogIn, LogOut, Loader2, Menu, Share2, RotateCw } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 import ShareQRModal from './ShareQRModal';
 import { useState } from 'react';
@@ -19,7 +19,10 @@ export default function TopBar() {
     logout, 
     loading,
     isMobileMenuOpen,
-    setIsMobileMenuOpen
+    setIsMobileMenuOpen,
+    refreshProjects,
+    isRefreshing,
+    lastSyncedAt
   } = useProjects();
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -57,6 +60,15 @@ export default function TopBar() {
           title="Share GCMP Hub"
         >
           <Share2 className="w-5 h-5" />
+        </button>
+
+        <button
+          onClick={() => refreshProjects(true)}
+          disabled={isRefreshing}
+          className="flex items-center justify-center p-2 rounded-xl text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-transparent hover:border-indigo-100 disabled:opacity-50"
+          title={lastSyncedAt ? `ซิงก์ล่าสุด: ${lastSyncedAt.toLocaleTimeString('th-TH')}` : "รีเฟรชข้อมูล (Sync from Cloud)"}
+        >
+          <RotateCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
         </button>
 
         {isAdmin && (

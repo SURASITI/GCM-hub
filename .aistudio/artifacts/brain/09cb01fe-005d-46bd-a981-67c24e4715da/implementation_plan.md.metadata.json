@@ -1,0 +1,6 @@
+{
+  "summary":  "สถาปัตยกรรมแก้ปัญหาโควตา Firestore ถาวร: เปลี่ยนการดึงข้อมูลหลักเป็น getDocs พร้อม Offline & Local Storage Cache และแยกการโหลดความคิดเห็น (Comments) เป็นแบบ On-Demand เมื่อผู้ใช้คลิกดูรายละเอียดเท่านั้น",
+  "updatedAt":  "2026-11-10T09:53:58.002240713Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

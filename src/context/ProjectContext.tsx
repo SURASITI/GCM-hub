@@ -17,6 +17,7 @@ import {
 import { 
   collection, 
   getDocs,
+  getDoc,
   onSnapshot, 
   addDoc, 
   deleteDoc, 
@@ -36,6 +37,8 @@ interface ProjectContextType {
   deleteProject: (id: string) => Promise<void>;
   voteProject: (id: string) => Promise<void>;
   commentProject: (id: string, text: string) => Promise<void>;
+  fetchProjectComments: (projectId: string) => Promise<void>;
+  commentsLoading: Record<string, boolean>;
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
   isAdmin: boolean;
@@ -92,6 +95,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState<Record<string, boolean>>({});
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => {
     try {
       const last = localStorage.getItem('gcmp_last_fetch_time');
@@ -182,14 +186,25 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           ...doc.data()
         })) as Project[];
         
-        setProjects(projectsData);
-        try {
-          localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(projectsData));
-          localStorage.setItem('gcmp_last_fetch_time', String(Date.now()));
-          localStorage.removeItem('gcmp_quota_blocked_until');
-        } catch (e) {
-          // ignore localStorage full
-        }
+        setProjects(prev => {
+          // Preserve any existing commentsList already loaded in memory
+          const commentsCache = new Map(prev.filter(p => p.commentsList).map(p => [p.id, p.commentsList]));
+          const merged = projectsData.map(p => {
+            if (!p.commentsList && commentsCache.has(p.id)) {
+              return { ...p, commentsList: commentsCache.get(p.id) };
+            }
+            return p;
+          });
+          try {
+            localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(merged));
+            localStorage.setItem('gcmp_last_fetch_time', String(Date.now()));
+            localStorage.removeItem('gcmp_quota_blocked_until');
+          } catch (e) {
+            // ignore localStorage full
+          }
+          return merged;
+        });
+
         setLastSyncedAt(new Date());
         setIsQuotaExceeded(false);
       }
@@ -213,6 +228,42 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const fetchProjectComments = async (projectId: string) => {
+    if (commentsLoading[projectId]) return;
+
+    setCommentsLoading(prev => ({ ...prev, [projectId]: true }));
+    try {
+      const projectRef = doc(db, 'projects', projectId);
+      const snap = await getDoc(projectRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const commentsList = (data.commentsList || []) as Project['commentsList'];
+        const commentsCount = typeof data.comments === 'number' ? data.comments : (commentsList ? commentsList.length : 0);
+
+        setProjects(prev => {
+          const updated = prev.map(p => {
+            if (p.id === projectId) {
+              return {
+                ...p,
+                comments: commentsCount,
+                commentsList: commentsList
+              };
+            }
+            return p;
+          });
+          try {
+            localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.warn("Could not fetch project comments on-demand:", error);
+    } finally {
+      setCommentsLoading(prev => ({ ...prev, [projectId]: false }));
     }
   };
 
@@ -498,6 +549,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       deleteProject,
       voteProject,
       commentProject,
+      fetchProjectComments,
+      commentsLoading,
       isModalOpen, 
       setIsModalOpen, 
       isAdmin, 

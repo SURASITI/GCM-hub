@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { MessageCircle, ThumbsUp, Trophy, ArrowRight, Send, Edit3, Heart, Lock, Download } from 'lucide-react';
+import { MessageCircle, ThumbsUp, Trophy, ArrowRight, Send, Edit3, Heart, Lock, Download, Loader2 } from 'lucide-react';
 import React from 'react';
 import { Project } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -15,9 +15,31 @@ interface ProjectCardProps {
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
-  const { isAdmin, voteProject, commentProject, user, guestId, setIsModalOpen, setEditingProject, favorites, toggleFavorite } = useProjects();
+  const { 
+    isAdmin, 
+    voteProject, 
+    commentProject, 
+    fetchProjectComments, 
+    commentsLoading, 
+    user, 
+    guestId, 
+    setIsModalOpen, 
+    setEditingProject, 
+    favorites, 
+    toggleFavorite 
+  } = useProjects();
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   const [newComment, setNewComment] = useState('');
+  
+  const isLoadingComments = commentsLoading[project.id];
+
+  const handleToggleComments = () => {
+    const nextState = !isCommentsExpanded;
+    setIsCommentsExpanded(nextState);
+    if (nextState && project.commentsList === undefined) {
+      fetchProjectComments(project.id);
+    }
+  };
   
   const handleCreateShortcut = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -231,7 +253,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               <Download className="w-4 h-4 stroke-[2.5]" />
             </a>
             <button 
-              onClick={() => setIsCommentsExpanded(!isCommentsExpanded)}
+              onClick={handleToggleComments}
               className={`flex items-center gap-1.5 transition-colors active:scale-90 ${
                 isCommentsExpanded ? 'text-blue-600' : 'text-slate-700 hover:text-blue-500'
               }`}
@@ -281,25 +303,32 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                   </button>
                 </form>
 
-                <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                  {project.commentsList?.map((comment) => (
-                    <div key={comment.id} className="flex gap-3">
-                      <img src={comment.userAvatar} alt="" className="w-8 h-8 rounded-full border border-slate-100" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-800">{comment.userName}</span>
-                          <span className="text-[10px] text-slate-400">{comment.time}</span>
+                {isLoadingComments ? (
+                  <div className="flex items-center justify-center py-6 text-slate-400 gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                    <span className="text-xs font-medium">กำลังโหลดความคิดเห็น...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                    {project.commentsList?.map((comment) => (
+                      <div key={comment.id} className="flex gap-3">
+                        <img src={comment.userAvatar} alt="" className="w-8 h-8 rounded-full border border-slate-100" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-800">{comment.userName}</span>
+                            <span className="text-[10px] text-slate-400">{comment.time}</span>
+                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed bg-slate-50 p-2 rounded-lg rounded-tl-none border border-slate-50">
+                            {comment.text}
+                          </p>
                         </div>
-                        <p className="text-xs text-slate-600 mt-0.5 leading-relaxed bg-slate-50 p-2 rounded-lg rounded-tl-none border border-slate-50">
-                          {comment.text}
-                        </p>
                       </div>
-                    </div>
-                  ))}
-                  {(!project.commentsList || project.commentsList.length === 0) && (
-                    <p className="text-center py-4 text-xs text-slate-400 italic">No comments yet. Be the first!</p>
-                  )}
-                </div>
+                    ))}
+                    {(!project.commentsList || project.commentsList.length === 0) && (
+                      <p className="text-center py-4 text-xs text-slate-400 italic">No comments yet. Be the first!</p>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

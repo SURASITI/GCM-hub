@@ -14,7 +14,7 @@ import QuotaBanner from './components/QuotaBanner';
 import { ProjectProvider, useProjects } from './context/ProjectContext';
 
 function AppContent() {
-  const { user, login, loading, activeTab, searchQuery } = useProjects();
+  const { user, login, loading, activeTab, searchQuery, toastMessage, setToastMessage } = useProjects();
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim() !== '') {
@@ -79,6 +79,20 @@ function AppContent() {
       </main>
       
       <NewProjectModal />
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-700/80 text-sm font-semibold animate-fade-in transition-all">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+          <span>{toastMessage}</span>
+          <button 
+            onClick={() => setToastMessage(null)}
+            className="ml-3 text-slate-400 hover:text-white transition-colors p-1"
+            title="ปิด"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

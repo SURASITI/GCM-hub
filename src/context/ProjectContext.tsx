@@ -63,6 +63,8 @@ interface ProjectContextType {
   refreshProjects: (force?: boolean) => Promise<void>;
   isRefreshing: boolean;
   lastSyncedAt: Date | null;
+  toastMessage: string | null;
+  setToastMessage: (msg: string | null) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -113,6 +115,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState('Overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [guestId, setGuestId] = useState<string>(() => {
     let gid = localStorage.getItem('gcmp_guest_id');
@@ -392,6 +395,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const docRef = await addDoc(collection(db, 'projects'), docData);
 
       // Optimistically update local state & cache
+      const now = Date.now();
       const newCreated: Project = {
         id: docRef.id,
         ...newProjectData,
@@ -399,17 +403,34 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         comments: 0,
         ownerId: user.uid,
         ownerName: user.displayName || 'Anonymous',
-        ownerAvatar: newProjectData.ownerAvatar || user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        ownerAvatar: newProjectData.ownerAvatar || user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'Anonymous')}`,
+        createdAt: {
+          seconds: Math.floor(now / 1000),
+          nanoseconds: 0,
+        },
+        updatedAt: {
+          seconds: Math.floor(now / 1000),
+          nanoseconds: 0,
+        },
       };
       setProjects(prev => {
-        const updated = [newCreated, ...prev];
+        const updated = [newCreated, ...prev.filter(p => p.id !== docRef.id)];
         try {
           localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(updated));
         } catch (e) {}
         return updated;
       });
+
+      // Clear search query so newly added app is not hidden by old filters
+      setSearchQuery('');
+      if (activeTab === 'Favorites' || activeTab === 'User Guide') {
+        setActiveTab('Overview');
+      }
+
+      setToastMessage(`🎉 เพิ่มแอปพลิเคชัน "${newCreated.title}" สำเร็จเรียบร้อยแล้ว!`);
+      setTimeout(() => {
+        setToastMessage(null);
+      }, 5000);
 
       setIsModalOpen(false);
     } catch (error) {
@@ -428,14 +449,24 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         updatedAt: serverTimestamp()
       });
 
+      const now = Date.now();
       // Optimistically update local state & cache
       setProjects(prev => {
-        const updated = prev.map(p => p.id === id ? { ...p, ...data, updatedAt: new Date().toISOString() } : p);
+        const updated = prev.map(p => p.id === id ? { 
+          ...p, 
+          ...data, 
+          updatedAt: { seconds: Math.floor(now / 1000), nanoseconds: 0 } 
+        } : p);
         try {
           localStorage.setItem('gcmp_cached_projects_v2', JSON.stringify(updated));
         } catch (e) {}
         return updated;
       });
+
+      setToastMessage(`บันทึกการแก้ไข "${data.title || 'แอปพลิเคชัน'}" เรียบร้อยแล้ว`);
+      setTimeout(() => {
+        setToastMessage(null);
+      }, 4000);
     } catch (error) {
       console.error("Error updating project", error);
       throw error;
@@ -454,6 +485,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         } catch (e) {}
         return updated;
       });
+
+      setToastMessage('ลบแอปพลิเคชันออกจากระบบเรียบร้อยแล้ว');
+      setTimeout(() => {
+        setToastMessage(null);
+      }, 4000);
     } catch (error) {
       console.error("Error deleting project", error);
     }
@@ -574,7 +610,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       upgradeUrl: UPGRADE_URL,
       refreshProjects,
       isRefreshing,
-      lastSyncedAt
+      lastSyncedAt,
+      toastMessage,
+      setToastMessage
     }}>
       {children}
     </ProjectContext.Provider>

@@ -69,17 +69,26 @@ export default function ProjectGallery() {
       return list.sort((a, b) => a.title.localeCompare(b.title, 'th'));
     }
     // 'newest' default (createdAt desc)
+    const parseTime = (val: any): number => {
+      if (!val) return 0;
+      if (typeof val === 'number') return val;
+      if (val.seconds !== undefined) return val.seconds * 1000;
+      if (typeof val.toDate === 'function') return val.toDate().getTime();
+      const parsed = new Date(val).getTime();
+      return isNaN(parsed) ? 0 : parsed;
+    };
+
     return list.sort((a, b) => {
-      const timeA = a.createdAt?.seconds || 0;
-      const timeB = b.createdAt?.seconds || 0;
+      const timeA = parseTime(a.createdAt);
+      const timeB = parseTime(b.createdAt);
       return timeB - timeA;
     });
   }, [filteredProjects, sortBy]);
 
-  // Reset to page 1 when category, search, or itemsPerPage change
+  // Reset to page 1 when category, search, itemsPerPage, or project count change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery, sortBy, itemsPerPage]);
+  }, [selectedCategory, searchQuery, sortBy, itemsPerPage, projects.length]);
 
   // Pagination calculation
   const totalItems = sortedProjects.length;

@@ -154,8 +154,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
-
   const fetchProjects = async (force: boolean = false) => {
     // 1. If currently known to be blocked by quota today, don't hammer the server unless forced
     if (!force) {
@@ -169,11 +167,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         // ignore
       }
 
-      // 2. Cache-First check: If we have cached projects within 6 hours, skip network read completely (0 reads)
+      // 2. Check Cache TTL: if cached within last 30 minutes, skip network read (0 reads)
       try {
         const lastFetch = localStorage.getItem('gcmp_last_fetch_time');
-        const hasCachedData = localStorage.getItem('gcmp_cached_projects_v2');
-        if (hasCachedData && projects.length > 0 && lastFetch && Date.now() - Number(lastFetch) < CACHE_TTL_MS) {
+        if (lastFetch && projects.length > 0 && Date.now() - Number(lastFetch) < 30 * 60 * 1000) {
           return;
         }
       } catch (e) {
@@ -274,7 +271,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Cache-First 100%: Never force network read on tab/window opening
+    // Respect cache TTL on initial load / new window to prevent excess Firestore reads
     fetchProjects(false);
   }, []);
 

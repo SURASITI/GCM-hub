@@ -14,7 +14,7 @@ export default defineConfig(() => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
-      dedupe: ['firebase', '@firebase/app', '@firebase/firestore'],
+      dedupe: ['firebase', 'firebase/app', 'firebase/auth', 'firebase/firestore', '@firebase/app', '@firebase/auth', '@firebase/firestore', '@firebase/component'],
     },
     server: {
       port: 3000,

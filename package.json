@@ -12,6 +12,10 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@firebase/app": "^0.16.6",
+    "@firebase/auth": "^1.13.10",
+    "@firebase/component": "^0.7.5",
+    "@firebase/firestore": "^4.20.0",
     "@google/genai": "^1.29.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",

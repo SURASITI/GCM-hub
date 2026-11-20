@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Bell, Search, Shield, ShieldAlert, LogIn, LogOut, Loader2, Menu, Share2, RotateCw } from 'lucide-react';
+import { Bell, Search, Shield, ShieldAlert, LogIn, LogOut, Loader2, Menu, Share2, RotateCw, ImageDown } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 import ShareQRModal from './ShareQRModal';
 import { useState } from 'react';
@@ -22,7 +22,8 @@ export default function TopBar() {
     setIsMobileMenuOpen,
     refreshProjects,
     isRefreshing,
-    lastSyncedAt
+    lastSyncedAt,
+    setIsOptimizerModalOpen
   } = useProjects();
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -72,9 +73,19 @@ export default function TopBar() {
         </button>
 
         {isAdmin && (
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            Admin
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsOptimizerModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
+              title="บีบอัดรูปภาพทั้งหมดใน Firebase ให้เป็น WebP ขนาดเล็กสุด"
+            >
+              <ImageDown className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">บีบอัดรูป Firebase</span>
+            </button>
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Admin
+            </div>
           </div>
         )}
 

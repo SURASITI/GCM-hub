@@ -9,7 +9,7 @@ import { X, Upload, Loader2, Edit3, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useProjects } from '../context/ProjectContext';
 import { CATEGORIES } from '../types';
-import { compressImage } from '../lib/imageCompressor';
+import { compressImage, THUMBNAIL_COMPRESS_OPTIONS, AVATAR_COMPRESS_OPTIONS, getDataUrlByteSize } from '../lib/imageCompressor';
 
 export default function NewProjectModal() {
   const { isModalOpen, setIsModalOpen, addProject, editingProject, setEditingProject, updateProject, deleteProject, user } = useProjects();
@@ -78,7 +78,7 @@ export default function NewProjectModal() {
       setIsProcessingImage(true);
       setSubmitError(null);
       try {
-        const compressed = await compressImage(file, { maxWidth: 600, maxHeight: 600, quality: 0.82 });
+        const compressed = await compressImage(file, THUMBNAIL_COMPRESS_OPTIONS);
         setFormData((prev) => ({ ...prev, thumbnail: compressed }));
       } catch (error) {
         console.error("Error compressing thumbnail:", error);
@@ -94,7 +94,7 @@ export default function NewProjectModal() {
       setIsProcessingImage(true);
       setSubmitError(null);
       try {
-        const compressed = await compressImage(file, { maxWidth: 200, maxHeight: 200, quality: 0.85 });
+        const compressed = await compressImage(file, AVATAR_COMPRESS_OPTIONS);
         setFormData((prev) => ({ ...prev, ownerAvatar: compressed }));
       } catch (error) {
         console.error("Error compressing owner avatar:", error);
@@ -112,13 +112,13 @@ export default function NewProjectModal() {
     setSubmitError(null);
     
     try {
-      // Auto-compress base64 images to guarantee Firestore document size <= 1MB
+      // Enforce Ultra-Compact WebP limits on base64 & remote URLs
       let finalThumbnail = formData.thumbnail;
       let finalOwnerAvatar = formData.ownerAvatar;
 
       if (finalThumbnail && finalThumbnail.startsWith('data:image/')) {
         try {
-          finalThumbnail = await compressImage(finalThumbnail, { maxWidth: 600, maxHeight: 600, quality: 0.82 });
+          finalThumbnail = await compressImage(finalThumbnail, THUMBNAIL_COMPRESS_OPTIONS);
         } catch (err) {
           console.warn("Failed to re-compress thumbnail, using original:", err);
         }
@@ -126,11 +126,13 @@ export default function NewProjectModal() {
 
       if (finalOwnerAvatar && finalOwnerAvatar.startsWith('data:image/')) {
         try {
-          finalOwnerAvatar = await compressImage(finalOwnerAvatar, { maxWidth: 200, maxHeight: 200, quality: 0.85 });
+          finalOwnerAvatar = await compressImage(finalOwnerAvatar, AVATAR_COMPRESS_OPTIONS);
         } catch (err) {
           console.warn("Failed to re-compress avatar, using original:", err);
         }
       }
+
+      const defaultThumb = 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?auto=format&fit=crop&q=55&fm=webp&w=400';
 
       if (editingProject) {
         await updateProject(editingProject.id, {
@@ -138,7 +140,7 @@ export default function NewProjectModal() {
           team: formData.team,
           category: formData.category,
           description: formData.description,
-          thumbnail: finalThumbnail || 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?auto=format&fit=crop&q=80&w=400&h=250',
+          thumbnail: finalThumbnail || defaultThumb,
           projectUrl: formData.projectUrl,
           ownerAvatar: finalOwnerAvatar || user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.team || 'User')}`,
         });
@@ -150,7 +152,7 @@ export default function NewProjectModal() {
           team: formData.team,
           category: formData.category,
           description: formData.description,
-          thumbnail: finalThumbnail || 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?auto=format&fit=crop&q=80&w=400&h=250',
+          thumbnail: finalThumbnail || defaultThumb,
           projectUrl: formData.projectUrl,
           ownerAvatar: finalOwnerAvatar || user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.team || 'User')}`,
         });
@@ -304,13 +306,21 @@ export default function NewProjectModal() {
                       placeholder="Paste image URL..."
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
                     />
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                        <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
                        <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
                          {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                          {isProcessingImage ? 'Optimizing...' : 'Upload File'}
                          <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={isProcessingImage} />
                        </label>
+                       <span className="text-[10px] text-emerald-600 font-semibold">
+                         (Auto WebP ≤360px / ≤35KB)
+                       </span>
+                       {formData.thumbnail?.startsWith('data:image/') && (
+                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
+                           {(getDataUrlByteSize(formData.thumbnail) / 1024).toFixed(1)} KB
+                         </span>
+                       )}
                     </div>
                   </div>
                   {formData.thumbnail && (
@@ -332,13 +342,21 @@ export default function NewProjectModal() {
                       placeholder="Paste image URL (or leave blank to use default)..."
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
                     />
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                        <span className="text-[10px] text-slate-400 font-bold uppercase">or</span>
                        <label className="cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider flex items-center gap-1">
                          {isProcessingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                          {isProcessingImage ? 'Optimizing...' : 'Upload Avatar'}
                          <input type="file" className="hidden" accept="image/*" onChange={handleOwnerAvatarFileChange} disabled={isProcessingImage} />
                        </label>
+                       <span className="text-[10px] text-emerald-600 font-semibold">
+                         (Auto WebP ≤96px / ≤10KB)
+                       </span>
+                       {formData.ownerAvatar?.startsWith('data:image/') && (
+                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
+                           {(getDataUrlByteSize(formData.ownerAvatar) / 1024).toFixed(1)} KB
+                         </span>
+                       )}
                     </div>
                   </div>
                   {formData.ownerAvatar && (

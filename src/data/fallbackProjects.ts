@@ -17,7 +17,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบตรวจสอบอุปกรณ์ไฟฟ้าประจำวันและบันทึกผลการตรวจสอบความปลอดภัยทางไฟฟ้า",
     votes: 18,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 12,
     createdAt: "2024-01-15T08:00:00.000Z",
     updatedAt: "2024-01-15T08:00:00.000Z"
@@ -34,7 +34,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 24,
     comments: 5,
     rank: "bronze",
-    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 19,
     createdAt: "2024-01-16T08:00:00.000Z",
     updatedAt: "2024-01-16T08:00:00.000Z"
@@ -50,7 +50,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ติดตามและจัดการกิจกรรมควบคุมคุณภาพ ผลการตรวจสอบสเปก และรายงานความคลาดเคลื่อน",
     votes: 15,
     comments: 2,
-    thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 9,
     createdAt: "2024-01-17T08:00:00.000Z",
     updatedAt: "2024-01-17T08:00:00.000Z"
@@ -67,7 +67,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 31,
     comments: 8,
     rank: "silver",
-    thumbnail: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 28,
     createdAt: "2024-01-18T08:00:00.000Z",
     updatedAt: "2024-01-18T08:00:00.000Z"
@@ -83,7 +83,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "บันทึกและควบคุมปริมาณการเบิกจ่ายน้ำมันดีเซลสำหรับเครื่องจักรและยานพาหนะโรงงาน",
     votes: 14,
     comments: 1,
-    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 11,
     createdAt: "2024-01-19T08:00:00.000Z",
     updatedAt: "2024-01-19T08:00:00.000Z"
@@ -100,7 +100,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 42,
     comments: 9,
     rank: "gold",
-    thumbnail: "https://images.unsplash.com/photo-1595079672139-545c60ab23a7?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1595079672139-545c60ab23a7?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 35,
     createdAt: "2024-01-20T08:00:00.000Z",
     updatedAt: "2024-01-20T08:00:00.000Z"
@@ -116,7 +116,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "คลังความรู้และระบบเรียนรู้ออนไลน์สำหรับพนักงาน พัฒนาทักษะดิจิทัลและ AI Studio",
     votes: 38,
     comments: 7,
-    thumbnail: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 30,
     createdAt: "2024-01-21T08:00:00.000Z",
     updatedAt: "2024-01-21T08:00:00.000Z"
@@ -132,7 +132,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบจัดตารางกะการทำงานและสลับกะอัตโนมัติ พร้อมแจ้งเตือนและการส่งมอบงาน",
     votes: 27,
     comments: 6,
-    thumbnail: "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 22,
     createdAt: "2024-01-22T08:00:00.000Z",
     updatedAt: "2024-01-22T08:00:00.000Z"
@@ -148,7 +148,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "บันทึกและสรุปผลการทดสอบเดินเครื่องจักร (Test Run) หลังงานซ่อมบำรุง",
     votes: 19,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 16,
     createdAt: "2024-01-23T08:00:00.000Z",
     updatedAt: "2024-01-23T08:00:00.000Z"
@@ -164,7 +164,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "พื้นที่ทำงานและคำนวณการสอบเทียบ Safety Relief Valve ตามมาตรฐานวิศวกรรม",
     votes: 21,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 15,
     createdAt: "2024-01-24T08:00:00.000Z",
     updatedAt: "2024-01-24T08:00:00.000Z"
@@ -180,7 +180,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบบริหารสต็อกและเบิกจ่ายวัสดุอุปกรณ์ทำความสะอาดสำหรับงานแม่บ้าน",
     votes: 16,
     comments: 2,
-    thumbnail: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 13,
     createdAt: "2024-01-25T08:00:00.000Z",
     updatedAt: "2024-01-25T08:00:00.000Z"
@@ -196,7 +196,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "บันทึกและประเมินสภาพสลิงผ้าใบ (Webbing Sling) ก่อนและหลังการยกเคลื่อนย้าย",
     votes: 18,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 14,
     createdAt: "2024-01-26T08:00:00.000Z",
     updatedAt: "2024-01-26T08:00:00.000Z"
@@ -212,7 +212,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "โปรแกรมจำลองการทำงานของ Control Valve แบบ Split Range ควบคุมการไหลในระบบ",
     votes: 29,
     comments: 7,
-    thumbnail: "https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 25,
     createdAt: "2024-01-27T08:00:00.000Z",
     updatedAt: "2024-01-27T08:00:00.000Z"
@@ -228,7 +228,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบจองรถตู้ส่วนกลางสำหรับเดินทางติดต่อราชการและดูงานนอกสถานที่",
     votes: 35,
     comments: 8,
-    thumbnail: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 29,
     createdAt: "2024-01-28T08:00:00.000Z",
     updatedAt: "2024-01-28T08:00:00.000Z"
@@ -244,7 +244,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "รายงานและระงับการทำงานที่ไม่ปลอดภัยของผู้รับเหมา (Safety STOP System)",
     votes: 23,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 17,
     createdAt: "2024-01-29T08:00:00.000Z",
     updatedAt: "2024-01-29T08:00:00.000Z"
@@ -260,7 +260,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "การจัดการประวัติการซ่อมบำรุงชุดเกียร์ทดรอบและอุปกรณ์ส่งกำลังเครื่องจักรกล",
     votes: 20,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 18,
     createdAt: "2024-01-30T08:00:00.000Z",
     updatedAt: "2024-01-30T08:00:00.000Z"
@@ -276,7 +276,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "คำนวณและติดตาม Running Hours พร้อมแจ้งเตือนรอบเปลี่ยนถ่ายน้ำมันหล่อลื่น",
     votes: 26,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 21,
     createdAt: "2024-01-31T08:00:00.000Z",
     updatedAt: "2024-01-31T08:00:00.000Z"
@@ -292,7 +292,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบวิเคราะห์สมดุลและการไหลของก๊าซในกระบวนการผลิตพร้อมคำนวณอัตราสิ้นเปลือง",
     votes: 33,
     comments: 6,
-    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 27,
     createdAt: "2024-02-01T08:00:00.000Z",
     updatedAt: "2024-02-01T08:00:00.000Z"
@@ -308,7 +308,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ศูนย์รวมข้อมูลและสถิติการผลิตสำหรับ TPRC ติดตามตัวชี้วัดประสิทธิภาพโรงงาน",
     votes: 30,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 24,
     createdAt: "2024-02-02T08:00:00.000Z",
     updatedAt: "2024-02-02T08:00:00.000Z"
@@ -324,7 +324,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "บันทึกการตรวจสอบแผ่นสละแรงดัน (Rupture Disc) ตรวจเช็คความสมบูรณ์และรอบเปลี่ยน",
     votes: 17,
     comments: 2,
-    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 14,
     createdAt: "2024-02-03T08:00:00.000Z",
     updatedAt: "2024-02-03T08:00:00.000Z"
@@ -341,7 +341,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 39,
     comments: 11,
     rank: "silver",
-    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 33,
     createdAt: "2024-02-04T08:00:00.000Z",
     updatedAt: "2024-02-04T08:00:00.000Z"
@@ -358,7 +358,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 45,
     comments: 12,
     rank: "gold",
-    thumbnail: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 40,
     createdAt: "2024-02-05T08:00:00.000Z",
     updatedAt: "2024-02-05T08:00:00.000Z"
@@ -374,7 +374,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบสั่งกาแฟและเครื่องดื่มล่วงหน้าสำหรับพนักงานและห้องประชุม SNOW Coffee Bar",
     votes: 36,
     comments: 9,
-    thumbnail: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 31,
     createdAt: "2024-02-06T08:00:00.000Z",
     updatedAt: "2024-02-06T08:00:00.000Z"
@@ -390,7 +390,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ติดตามงบประมาณลงทุน CAPEX งานโครงการด้านวิศวกรรมและการปรับปรุงโรงงาน",
     votes: 28,
     comments: 6,
-    thumbnail: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 23,
     createdAt: "2024-02-07T08:00:00.000Z",
     updatedAt: "2024-02-07T08:00:00.000Z"
@@ -406,7 +406,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "เครื่องมือคำนวณและบันทึกความแม่นยำด้านเทคนิควิศวกรรมสำหรับงานประกอบเครื่องจักร",
     votes: 22,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092335878-2d9ff86ca2bf?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092335878-2d9ff86ca2bf?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 19,
     createdAt: "2024-02-08T08:00:00.000Z",
     updatedAt: "2024-02-08T08:00:00.000Z"
@@ -422,7 +422,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "แบบประเมินและรวบรวมฟีดแบ็กงานซ่อมบำรุงช่วงหยุดเดินเครื่องประจำปี (Plant Shutdown)",
     votes: 25,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 20,
     createdAt: "2024-02-09T08:00:00.000Z",
     updatedAt: "2024-02-09T08:00:00.000Z"
@@ -438,7 +438,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบรับแจ้งปัญหาและขอความช่วยเหลือด้านไอทีและระบบสนับสนุนการปฏิบัติงาน",
     votes: 32,
     comments: 7,
-    thumbnail: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 26,
     createdAt: "2024-02-10T08:00:00.000Z",
     updatedAt: "2024-02-10T08:00:00.000Z"
@@ -454,7 +454,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบสันทนาการ กิจกรรมสร้างความสัมพันธ์ และสวัสดิการพนักงานภายในองค์กร",
     votes: 27,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 22,
     createdAt: "2024-02-11T08:00:00.000Z",
     updatedAt: "2024-02-11T08:00:00.000Z"
@@ -470,7 +470,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "วางแผนงบประมาณซ่อมบำรุงอัจฉริยะ คาดการณ์ค่าใช้จ่ายและตรวจสอบงบคงเหลือ",
     votes: 31,
     comments: 6,
-    thumbnail: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 25,
     createdAt: "2024-02-12T08:00:00.000Z",
     updatedAt: "2024-02-12T08:00:00.000Z"
@@ -486,7 +486,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ฐานข้อมูลและคู่มือตรวจสอบวาล์วอุตสาหกรรม การคำนวณ CV และแรงดันตกคร่อม",
     votes: 24,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 19,
     createdAt: "2024-02-13T08:00:00.000Z",
     updatedAt: "2024-02-13T08:00:00.000Z"
@@ -502,7 +502,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "คำนวณอัตราค่าบริการและปริมาณการใช้น้ำยาอุดรอยรั่วท่อ (Clamp Compound Unit Rate)",
     votes: 19,
     comments: 2,
-    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 15,
     createdAt: "2024-02-14T08:00:00.000Z",
     updatedAt: "2024-02-14T08:00:00.000Z"
@@ -518,7 +518,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "เครื่องมือคำนวณความตึงสายพานส่งกำลัง V-Belt และการตั้งแนว Pulley Alignment",
     votes: 22,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 18,
     createdAt: "2024-02-15T08:00:00.000Z",
     updatedAt: "2024-02-15T08:00:00.000Z"
@@ -534,7 +534,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบจัดตารางเวรและผู้รับผิดชอบ On-Call ประจำสัปดาห์สำหรับงานฉุกเฉิน",
     votes: 29,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 23,
     createdAt: "2024-02-16T08:00:00.000Z",
     updatedAt: "2024-02-16T08:00:00.000Z"
@@ -550,7 +550,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบจัดการงบประมาณและควบคุมเครื่องมือช่างในห้อง Tool Room อัตราสูญหายและการเบิกคืน",
     votes: 26,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 21,
     createdAt: "2024-02-17T08:00:00.000Z",
     updatedAt: "2024-02-17T08:00:00.000Z"
@@ -566,7 +566,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "แบบฟอร์มให้คะแนนและประเมินผลการทำงานของผู้รับเหมา KEC ตามเกณฑ์ความปลอดภัยและคุณภาพ",
     votes: 21,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 16,
     createdAt: "2024-02-18T08:00:00.000Z",
     updatedAt: "2024-02-18T08:00:00.000Z"
@@ -582,7 +582,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ตารางคำนวณพิกัดความเผื่อและระยะสวมตลับลูกปืนกับเพลา (Shaft Fit & Tolerance Guide)",
     votes: 34,
     comments: 6,
-    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 28,
     createdAt: "2024-02-19T08:00:00.000Z",
     updatedAt: "2024-02-19T08:00:00.000Z"
@@ -599,7 +599,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 48,
     comments: 14,
     rank: "gold",
-    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 42,
     createdAt: "2024-02-20T08:00:00.000Z",
     updatedAt: "2024-02-20T08:00:00.000Z"
@@ -615,7 +615,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบสแกนตรวจสอบสภาพถังดับเพลิงประจำเดือน ระดับเกจ์วัด และตำแหน่งติดตั้งทั่วโรงงาน",
     votes: 31,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 26,
     createdAt: "2024-02-21T08:00:00.000Z",
     updatedAt: "2024-02-21T08:00:00.000Z"
@@ -632,7 +632,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 40,
     comments: 10,
     rank: "silver",
-    thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 36,
     createdAt: "2024-02-22T08:00:00.000Z",
     updatedAt: "2024-02-22T08:00:00.000Z"
@@ -648,7 +648,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "Universal Testing Machine Data - บันทึกผลการทดสอบแรงดึงและคุณสมบัติเชิงกลของโลหะ",
     votes: 23,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 18,
     createdAt: "2024-02-23T08:00:00.000Z",
     updatedAt: "2024-02-23T08:00:00.000Z"
@@ -664,7 +664,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ศูนย์รวมสเปกเกียร์บ็อกซ์ อัตราทด ปริมาณน้ำมัน และตารางพาร์ทอะไหล่ทดแทน",
     votes: 26,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 22,
     createdAt: "2024-02-24T08:00:00.000Z",
     updatedAt: "2024-02-24T08:00:00.000Z"
@@ -680,7 +680,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ฐานข้อมูลมอเตอร์ไฟฟ้าอุตสาหกรรม กำลังไฟฟ้า รอบการหมุน ขนาดลูกปืน และพิกัดกระแส",
     votes: 35,
     comments: 7,
-    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 30,
     createdAt: "2024-02-25T08:00:00.000Z",
     updatedAt: "2024-02-25T08:00:00.000Z"
@@ -696,7 +696,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบเปิดคำขอใบแจ้งซ่อม M2 ใน SAP สะดวก รวดเร็ว พร้อมแนบรูปถ่ายหน้างาน",
     votes: 37,
     comments: 8,
-    thumbnail: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 32,
     createdAt: "2024-02-26T08:00:00.000Z",
     updatedAt: "2024-02-26T08:00:00.000Z"
@@ -713,7 +713,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 41,
     comments: 9,
     rank: "bronze",
-    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 35,
     createdAt: "2024-02-27T08:00:00.000Z",
     updatedAt: "2024-02-27T08:00:00.000Z"
@@ -729,7 +729,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ตารางสรุปเกรดน้ำมันหล่อลื่นและจาระบีเทียบเคียงสำหรับอุปกรณ์เครื่องจักรในโรงงาน",
     votes: 28,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 24,
     createdAt: "2024-02-28T08:00:00.000Z",
     updatedAt: "2024-02-28T08:00:00.000Z"
@@ -745,7 +745,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "คู่มือเลือกขนาดประแจขันหน้าแปลน Flange ให้ถูกต้องตามมาตรฐานและข้อกำหนดความปลอดภัย",
     votes: 25,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 20,
     createdAt: "2024-03-01T08:00:00.000Z",
     updatedAt: "2024-03-01T08:00:00.000Z"
@@ -761,7 +761,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "แบบตรวจเช็คความพร้อมและระบบไฮดรอลิกของรถเครนและรถบรรทุกติดเฮี๊ยบก่อนใช้งาน",
     votes: 20,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 16,
     createdAt: "2024-03-02T08:00:00.000Z",
     updatedAt: "2024-03-02T08:00:00.000Z"
@@ -777,7 +777,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบค้นหาขนาดและสเปกปะเก็น (Spiral Wound, Sheet Gasket) ตามขนาดท่อและพิกัดแรงดัน",
     votes: 33,
     comments: 6,
-    thumbnail: "https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 28,
     createdAt: "2024-03-03T08:00:00.000Z",
     updatedAt: "2024-03-03T08:00:00.000Z"
@@ -793,7 +793,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบรวบรวมข้อกังวลและประเด็นความเสี่ยงในการเดินเครื่องของโรงงานเพื่อดำเนินการแก้ไข",
     votes: 27,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 22,
     createdAt: "2024-03-04T08:00:00.000Z",
     updatedAt: "2024-03-04T08:00:00.000Z"
@@ -809,7 +809,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "เครื่องมือวิเคราะห์และถอดรหัสรหัสแท็กเครื่องมือวัด (Instrument Tag Analyzer)",
     votes: 36,
     comments: 7,
-    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 30,
     createdAt: "2024-03-05T08:00:00.000Z",
     updatedAt: "2024-03-05T08:00:00.000Z"
@@ -825,7 +825,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบบันทึกและติดตามการทำงานผ่านสมาร์ทโฟนสำหรับทีมภาคสนาม",
     votes: 38,
     comments: 9,
-    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 32,
     createdAt: "2024-03-06T08:00:00.000Z",
     updatedAt: "2024-03-06T08:00:00.000Z"
@@ -841,7 +841,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ข้อมูลดิจิทัลและแบบก่อสร้างถังเก็บสารเคมีและถังบรรจุแรงดัน (Storage Tanks Database)",
     votes: 29,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 24,
     createdAt: "2024-03-07T08:00:00.000Z",
     updatedAt: "2024-03-07T08:00:00.000Z"
@@ -857,7 +857,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบขอคิวและจองคิวใช้งานรถเครนและรถบรรทุกติดเฮี๊ยบสำหรับงานยกในโรงงาน",
     votes: 34,
     comments: 6,
-    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 28,
     createdAt: "2024-03-08T08:00:00.000Z",
     updatedAt: "2024-03-08T08:00:00.000Z"
@@ -873,7 +873,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ตารางขนาดดอกสว่านเจาะรูก่อนต๊าปเกลียวมาตรฐานมิลลิเมตร (Metric Tap Drill Table)",
     votes: 31,
     comments: 5,
-    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 27,
     createdAt: "2024-03-09T08:00:00.000Z",
     updatedAt: "2024-03-09T08:00:00.000Z"
@@ -890,7 +890,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 44,
     comments: 11,
     rank: "silver",
-    thumbnail: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 38,
     createdAt: "2024-03-10T08:00:00.000Z",
     updatedAt: "2024-03-10T08:00:00.000Z"
@@ -906,7 +906,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "ระบบจัดการสต็อกอะไหล่สำรองคงคลัง การเคลื่อนไหว และจุดสั่งซื้อที่ประหยัด (EOQ)",
     votes: 35,
     comments: 8,
-    thumbnail: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 30,
     createdAt: "2024-03-11T08:00:00.000Z",
     updatedAt: "2024-03-11T08:00:00.000Z"
@@ -922,7 +922,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "แบบบันทึกผลการเดินตรวจความปลอดภัย Patrol ตรวจสอบพื้นที่โรงงานและจุดเสี่ยง",
     votes: 22,
     comments: 3,
-    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 18,
     createdAt: "2024-03-12T08:00:00.000Z",
     updatedAt: "2024-03-12T08:00:00.000Z"
@@ -938,7 +938,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     description: "บันทึกประวัติการปรับสภาพและเปลี่ยนหน้าสัมผัส Mechanical Seal สำหรับปั๊มสารเคมี",
     votes: 27,
     comments: 4,
-    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 22,
     createdAt: "2024-03-13T08:00:00.000Z",
     updatedAt: "2024-03-13T08:00:00.000Z"
@@ -955,7 +955,7 @@ export const FALLBACK_PROJECTS: Project[] = [
     votes: 39,
     comments: 8,
     rank: "bronze",
-    thumbnail: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=60",
+    thumbnail: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&auto=format&fit=crop&q=55&fm=webp",
     favoriteCount: 34,
     createdAt: "2024-03-14T08:00:00.000Z",
     updatedAt: "2024-03-14T08:00:00.000Z"

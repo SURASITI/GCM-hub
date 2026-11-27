@@ -11,6 +11,7 @@ import FavoritesView from './components/FavoritesView';
 import UserGuideView from './components/UserGuideView';
 import NewProjectModal from './components/NewProjectModal';
 import AdminImageOptimizerModal from './components/AdminImageOptimizerModal';
+import RtdbMigrationModal from './components/RtdbMigrationModal';
 import QuotaBanner from './components/QuotaBanner';
 import { ProjectProvider, useProjects } from './context/ProjectContext';
 
@@ -81,6 +82,7 @@ function AppContent() {
       
       <NewProjectModal />
       <AdminImageOptimizerModal />
+      <RtdbMigrationModal />
 
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-700/80 text-sm font-semibold animate-fade-in transition-all">

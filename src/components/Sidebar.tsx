@@ -12,7 +12,9 @@ import {
   X,
   Globe,
   Download,
-  BookOpen
+  BookOpen,
+  ImageDown,
+  ArrowRightLeft
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useProjects } from '../context/ProjectContext';
@@ -33,7 +35,11 @@ export default function Sidebar() {
     activeTab, 
     setActiveTab, 
     isMobileMenuOpen, 
-    setIsMobileMenuOpen 
+    setIsMobileMenuOpen,
+    isAdmin,
+    setIsOptimizerModalOpen,
+    setIsMigrationModalOpen,
+    activeDataSource
   } = useProjects();
 
   return (
@@ -106,6 +112,31 @@ export default function Sidebar() {
         </nav>
 
         <div className="p-4 mt-auto border-t border-slate-100">
+          {isAdmin && (
+            <div className="space-y-2 mb-3">
+              <button
+                onClick={() => {
+                  setIsMigrationModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2.5 px-3 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200/80 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-xs"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                <span>{activeDataSource === 'rtdb' ? 'จัดการ RTDB (ใช้งานอยู่)' : 'ย้ายข้อมูลไป RTDB'}</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsOptimizerModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-xs"
+              >
+                <ImageDown className="w-4 h-4" />
+                <span>บีบอัดรูป Firebase ทั้งหมด</span>
+              </button>
+            </div>
+          )}
+
           <button 
             onClick={() => {
               setIsModalOpen(true);

@@ -5,30 +5,44 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { Project } from '../types';
-import { 
-  auth, 
-  db, 
-  googleProvider, 
-  signInWithPopup, 
-  signOut, 
+import {
+  auth,
+  db,
+  googleProvider,
+  signInWithPopup,
+  signOut,
   onAuthStateChanged,
   User,
   OperationType,
   handleFirestoreError,
-  testFirestoreConnection
+  testFirestoreConnection,
+  getEnvOrLocalRtdbUrl,
+  saveLocalRtdbUrl,
+  normalizeRtdbUrl,
+  fetchRtdbUrlFromConfigDoc,
+  saveRtdbUrlToConfigDoc,
 } from '../lib/firebase';
-import { 
-  collection, 
+import {
+  collection,
   getDocs,
   getDoc,
-  addDoc, 
-  deleteDoc, 
-  updateDoc, 
-  doc, 
+  addDoc,
+  deleteDoc,
+  updateDoc,
+  doc,
   serverTimestamp,
   query,
   orderBy
 } from 'firebase/firestore';
+import {
+  fetchAllProjectsFromRtdb,
+  fetchProjectCommentsFromRtdb,
+  createProjectInRtdb,
+  writeProjectWithIdInRtdb,
+  updateProjectInRtdb,
+  deleteProjectInRtdb,
+  normalizeTimestampToMs,
+} from '../lib/rtdbProjects';
 import {
   compressImage,
   THUMBNAIL_COMPRESS_OPTIONS,
@@ -56,6 +70,20 @@ export interface BatchOptimizeState {
   error: string | null;
 }
 
+export interface MigrationState {
+  isRunning: boolean;
+  total: number;
+  processed: number;
+  migratedCount: number;
+  compressedCount: number;
+  savedBytes: number;
+  currentTitle: string;
+  completed: boolean;
+  error: string | null;
+}
+
+export type ActiveDataSource = 'rtdb' | 'firestore' | 'fallback';
+
 interface ProjectContextType {
   projects: Project[];
   addProject: (project: Omit<Project, 'id' | 'votes' | 'comments' | 'ownerId' | 'ownerName' | 'ownerAvatar' | 'createdAt' | 'updatedAt'> & { ownerAvatar?: string }) => Promise<void>;
@@ -69,6 +97,8 @@ interface ProjectContextType {
   setIsModalOpen: (open: boolean) => void;
   isOptimizerModalOpen: boolean;
   setIsOptimizerModalOpen: (open: boolean) => void;
+  isMigrationModalOpen: boolean;
+  setIsMigrationModalOpen: (open: boolean) => void;
   isAdmin: boolean;
   setIsAdmin: (isAdmin: boolean) => void;
   searchQuery: string;
@@ -96,6 +126,12 @@ interface ProjectContextType {
   batchOptimizeState: BatchOptimizeState;
   batchOptimizeFirestoreImages: () => Promise<{ updatedCount: number; savedBytes: number }>;
   resetBatchOptimizeState: () => void;
+  rtdbUrl: string | null;
+  activeDataSource: ActiveDataSource;
+  migrationState: MigrationState;
+  migrateFirestoreToRtdb: (targetUrl: string, compressDuringMigration?: boolean) => Promise<{ migratedCount: number; savedBytes: number }>;
+  resetMigrationState: () => void;
+  inspectDatabaseCounts: (targetUrl?: string) => Promise<{ firestoreCount: number; rtdbCount: number | null; rtdbError?: string }>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -105,6 +141,18 @@ const INITIAL_OPTIMIZE_STATE: BatchOptimizeState = {
   total: 0,
   processed: 0,
   updatedCount: 0,
+  savedBytes: 0,
+  currentTitle: '',
+  completed: false,
+  error: null,
+};
+
+const INITIAL_MIGRATION_STATE: MigrationState = {
+  isRunning: false,
+  total: 0,
+  processed: 0,
+  migratedCount: 0,
+  compressedCount: 0,
   savedBytes: 0,
   currentTitle: '',
   completed: false,
@@ -121,10 +169,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState<Record<string, boolean>>({});
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [rtdbUrl, setRtdbUrl] = useState<string | null>(() => getEnvOrLocalRtdbUrl());
+  const [activeDataSource, setActiveDataSource] = useState<ActiveDataSource>('fallback');
+
   const cacheMetaRef = useRef<CacheMeta>({ lastFetchTime: null, quotaBlockedUntil: null });
+  const rtdbUrlRef = useRef<string | null>(rtdbUrl);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOptimizerModalOpen, setIsOptimizerModalOpen] = useState(false);
+  const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<User | null>(null);
@@ -134,6 +187,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [batchOptimizeState, setBatchOptimizeState] = useState<BatchOptimizeState>(INITIAL_OPTIMIZE_STATE);
+  const [migrationState, setMigrationState] = useState<MigrationState>(INITIAL_MIGRATION_STATE);
 
   const showToast = (msg: string, duration = 4500) => {
     setToastMessage(msg);
@@ -168,7 +222,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser?.email === 'Mosy_nicky@hotmail.com') {
+      if (currentUser?.email?.toLowerCase() === 'mosy_nicky@hotmail.com') {
         setIsAdmin(true);
       } else {
         setIsAdmin(false);
@@ -177,11 +231,34 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const fetchProjects = async (force: boolean = false, hydratedMeta?: CacheMeta, hasCachedData: boolean = false) => {
+  const mergeCommentsAndCache = (incomingProjects: Project[], source: ActiveDataSource) => {
+    setProjects(prev => {
+      const commentsCache = new Map<string, Project['commentsList']>(
+        prev.filter(p => p.commentsList).map(p => [p.id, p.commentsList])
+      );
+      const merged: Project[] = incomingProjects.map(p => {
+        if (!p.commentsList && commentsCache.has(p.id)) {
+          return { ...p, commentsList: commentsCache.get(p.id) };
+        }
+        return p;
+      });
+      setCachedProjectsInIDB(merged);
+      return merged;
+    });
+    setActiveDataSource(source);
+  };
+
+  const fetchProjects = async (
+    force: boolean = false,
+    hydratedMeta?: CacheMeta,
+    hasCachedData: boolean = false,
+    resolvedRtdbUrl?: string | null
+  ) => {
     const meta = hydratedMeta || cacheMetaRef.current;
+    const activeRtdb = resolvedRtdbUrl !== undefined ? resolvedRtdbUrl : rtdbUrlRef.current;
 
     if (!force) {
-      if (meta.quotaBlockedUntil && Date.now() < meta.quotaBlockedUntil) {
+      if (!activeRtdb && meta.quotaBlockedUntil && Date.now() < meta.quotaBlockedUntil) {
         setIsQuotaExceeded(true);
         return;
       }
@@ -194,6 +271,29 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setIsRefreshing(true);
 
     try {
+      // 1. Primary source: Firebase Realtime Database (if configured)
+      if (activeRtdb) {
+        try {
+          const rtdbProjects = await fetchAllProjectsFromRtdb(activeRtdb);
+          if (rtdbProjects.length > 0) {
+            mergeCommentsAndCache(rtdbProjects, 'rtdb');
+            const now = Date.now();
+            cacheMetaRef.current = await updateCacheMetaInIDB({
+              lastFetchTime: now,
+              quotaBlockedUntil: null,
+              rtdbUrl: activeRtdb,
+              dataSource: 'rtdb',
+            });
+            setLastSyncedAt(new Date(now));
+            setIsQuotaExceeded(false);
+            return;
+          }
+        } catch (rtdbErr) {
+          console.warn('RTDB fetch notice (falling back to Firestore/cache):', rtdbErr);
+        }
+      }
+
+      // 2. Safe Fallback: Cloud Firestore (only when RTDB is not configured or still empty)
       const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       if (snapshot.docs.length > 0) {
@@ -202,24 +302,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           ...d.data()
         })) as Project[];
 
-        setProjects(prev => {
-          const commentsCache = new Map<string, Project['commentsList']>(
-            prev.filter(p => p.commentsList).map(p => [p.id, p.commentsList])
-          );
-          const merged: Project[] = projectsData.map(p => {
-            if (!p.commentsList && commentsCache.has(p.id)) {
-              return { ...p, commentsList: commentsCache.get(p.id) };
-            }
-            return p;
-          });
-          setCachedProjectsInIDB(merged);
-          return merged;
-        });
+        mergeCommentsAndCache(projectsData, 'firestore');
 
         const now = Date.now();
         cacheMetaRef.current = await updateCacheMetaInIDB({
           lastFetchTime: now,
           quotaBlockedUntil: null,
+          dataSource: 'firestore',
         });
         setLastSyncedAt(new Date(now));
         setIsQuotaExceeded(false);
@@ -231,12 +320,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                       error?.code === 'resource-exhausted';
 
       if (isQuota) {
-        console.warn("Firestore Quota reached: serving projects from IndexedDB/fallback cache.");
+        console.warn('Firestore Quota reached: serving projects from IndexedDB/fallback cache.');
         setIsQuotaExceeded(true);
         const blockedUntil = Date.now() + 2 * 60 * 60 * 1000;
         cacheMetaRef.current = await updateCacheMetaInIDB({ quotaBlockedUntil: blockedUntil });
       } else {
-        console.warn("Firestore fetch notice:", errMsg);
+        console.warn('Database fetch notice:', errMsg);
       }
     } finally {
       setIsRefreshing(false);
@@ -253,6 +342,26 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
       cacheMetaRef.current = meta;
 
+      // Resolve RTDB URL from env -> config -> localStorage -> IDB -> Firestore config doc
+      let resolvedUrl = getEnvOrLocalRtdbUrl() || normalizeRtdbUrl(meta.rtdbUrl);
+      if (!resolvedUrl) {
+        resolvedUrl = await fetchRtdbUrlFromConfigDoc();
+        if (resolvedUrl) {
+          saveLocalRtdbUrl(resolvedUrl);
+          cacheMetaRef.current = await updateCacheMetaInIDB({ rtdbUrl: resolvedUrl });
+        }
+      }
+
+      if (!isMounted) return;
+      if (resolvedUrl) {
+        rtdbUrlRef.current = resolvedUrl;
+        setRtdbUrl(resolvedUrl);
+      }
+
+      if (meta.dataSource) {
+        setActiveDataSource(meta.dataSource);
+      }
+
       const hasCached = !!(cachedProjects && cachedProjects.length > 0);
       if (hasCached && cachedProjects) {
         setProjects(cachedProjects);
@@ -260,11 +369,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       if (meta.lastFetchTime) {
         setLastSyncedAt(new Date(meta.lastFetchTime));
       }
-      if (meta.quotaBlockedUntil && Date.now() < meta.quotaBlockedUntil) {
+      if (!resolvedUrl && meta.quotaBlockedUntil && Date.now() < meta.quotaBlockedUntil) {
         setIsQuotaExceeded(true);
       }
 
-      await fetchProjects(false, meta, hasCached);
+      await fetchProjects(false, meta, hasCached, resolvedUrl);
     };
     init();
     return () => {
@@ -277,6 +386,23 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     setCommentsLoading(prev => ({ ...prev, [projectId]: true }));
     try {
+      const currentRtdb = rtdbUrlRef.current;
+      if (currentRtdb && activeDataSource === 'rtdb') {
+        const res = await fetchProjectCommentsFromRtdb(currentRtdb, projectId);
+        if (res) {
+          setProjects(prev => {
+            const updated = prev.map(p =>
+              p.id === projectId
+                ? { ...p, comments: res.commentsCount, commentsList: res.commentsList }
+                : p
+            );
+            setCachedProjectsInIDB(updated);
+            return updated;
+          });
+          return;
+        }
+      }
+
       const projectRef = doc(db, 'projects', projectId);
       const snap = await getDoc(projectRef);
       if (snap.exists()) {
@@ -300,7 +426,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
-      console.warn("Could not fetch project comments on-demand:", error);
+      console.warn('Could not fetch project comments on-demand:', error);
     } finally {
       setCommentsLoading(prev => ({ ...prev, [projectId]: false }));
     }
@@ -330,6 +456,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     });
   }, [projects, user, guestId]);
 
+  const useRtdbForWrites = Boolean(rtdbUrlRef.current && activeDataSource === 'rtdb');
+
   const toggleFavorite = async (id: string) => {
     const identifier = user ? user.uid : guestId;
     if (!identifier) return;
@@ -347,16 +475,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(`gcmp_favorites_${identifier}`, JSON.stringify(newFavoritesList));
 
     const favoritedUserIds = project.favoritedUserIds || [];
-    let newDbUserIds: string[];
-    let newFavoriteCount: number;
-
-    if (isCurrentlyFavorited) {
-      newDbUserIds = favoritedUserIds.filter((uid) => uid !== identifier);
-      newFavoriteCount = Math.max(0, (project.favoriteCount || 0) - 1);
-    } else {
-      newDbUserIds = Array.from(new Set([...favoritedUserIds, identifier]));
-      newFavoriteCount = (project.favoriteCount || 0) + 1;
-    }
+    const newDbUserIds = isCurrentlyFavorited
+      ? favoritedUserIds.filter((uid) => uid !== identifier)
+      : Array.from(new Set([...favoritedUserIds, identifier]));
+    const newFavoriteCount = isCurrentlyFavorited
+      ? Math.max(0, (project.favoriteCount || 0) - 1)
+      : (project.favoriteCount || 0) + 1;
 
     setProjects(prev => {
       const updated = prev.map(p => p.id === id ? {
@@ -369,13 +493,20 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     });
 
     try {
-      const projectRef = doc(db, 'projects', id);
-      await updateDoc(projectRef, {
-        favoriteCount: newFavoriteCount,
-        favoritedUserIds: newDbUserIds,
-      });
+      if (useRtdbForWrites && rtdbUrlRef.current) {
+        await updateProjectInRtdb(rtdbUrlRef.current, id, {
+          favoriteCount: newFavoriteCount,
+          favoritedUserIds: newDbUserIds,
+        });
+      } else {
+        const projectRef = doc(db, 'projects', id);
+        await updateDoc(projectRef, {
+          favoriteCount: newFavoriteCount,
+          favoritedUserIds: newDbUserIds,
+        });
+      }
     } catch (error) {
-      console.error("Error updating favorite in Firestore", error);
+      console.error('Error updating favorite in database', error);
     }
   };
 
@@ -383,7 +514,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      console.error("Login failed", error);
+      console.error('Login failed', error);
     }
   };
 
@@ -391,13 +522,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Logout failed", error);
+      console.error('Logout failed', error);
     }
   };
 
   /**
    * Enforces Ultra-Compact WebP sizing on both thumbnail (<=360px, <=35KB)
-   * and ownerAvatar (<=96px, <=10KB) prior to any Firestore write.
+   * and ownerAvatar (<=96px, <=10KB) prior to any database write.
    */
   const enforceImageLimits = async (data: { thumbnail?: string; ownerAvatar?: string }) => {
     const out: { thumbnail?: string; ownerAvatar?: string } = {};
@@ -423,7 +554,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const addProject = async (newProjectData: any) => {
     if (!user) {
-      throw new Error("You must be signed in to add projects.");
+      throw new Error('You must be signed in to add projects.');
     }
 
     try {
@@ -438,36 +569,46 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         ownerAvatar: compressedImages.ownerAvatar ?? newProjectData.ownerAvatar,
       };
 
-      const docData = {
-        ...sanitizedProjectData,
-        votes: 0,
-        comments: 0,
-        ownerId: user.uid,
-        ownerName: user.displayName || 'Anonymous',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-      const docRef = await addDoc(collection(db, 'projects'), docData);
-
       const now = Date.now();
+      let newId: string;
+
+      if (useRtdbForWrites && rtdbUrlRef.current) {
+        newId = await createProjectInRtdb(rtdbUrlRef.current, {
+          ...sanitizedProjectData,
+          votes: 0,
+          comments: 0,
+          ownerId: user.uid,
+          ownerName: user.displayName || 'Anonymous',
+          createdAt: now,
+          updatedAt: now,
+        });
+      } else {
+        const docData = {
+          ...sanitizedProjectData,
+          votes: 0,
+          comments: 0,
+          ownerId: user.uid,
+          ownerName: user.displayName || 'Anonymous',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        const docRef = await addDoc(collection(db, 'projects'), docData);
+        newId = docRef.id;
+      }
+
       const newCreated: Project = {
-        id: docRef.id,
+        id: newId,
         ...sanitizedProjectData,
         votes: 0,
         comments: 0,
         ownerId: user.uid,
         ownerName: user.displayName || 'Anonymous',
-        createdAt: {
-          seconds: Math.floor(now / 1000),
-          nanoseconds: 0,
-        },
-        updatedAt: {
-          seconds: Math.floor(now / 1000),
-          nanoseconds: 0,
-        },
+        createdAt: useRtdbForWrites ? now : { seconds: Math.floor(now / 1000), nanoseconds: 0 },
+        updatedAt: useRtdbForWrites ? now : { seconds: Math.floor(now / 1000), nanoseconds: 0 },
       };
+
       setProjects(prev => {
-        const updated = [newCreated, ...prev.filter(p => p.id !== docRef.id)];
+        const updated = [newCreated, ...prev.filter(p => p.id !== newId)];
         setCachedProjectsInIDB(updated);
         return updated;
       });
@@ -480,17 +621,17 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       showToast(`🎉 เพิ่มแอปพลิเคชัน "${newCreated.title}" สำเร็จเรียบร้อยแล้ว!`, 5000);
       setIsModalOpen(false);
     } catch (error: any) {
-      if (error?.code === 'permission-denied' || String(error?.message).includes('Missing or insufficient permissions')) {
+      if (!useRtdbForWrites && (error?.code === 'permission-denied' || String(error?.message).includes('Missing or insufficient permissions'))) {
         handleFirestoreError(error, OperationType.CREATE, 'projects');
       }
-      console.error("Error adding project", error);
+      console.error('Error adding project', error);
       throw error;
     }
   };
 
   const updateProject = async (id: string, data: Partial<Project>) => {
     if (!user) {
-      throw new Error("You must be signed in to update projects.");
+      throw new Error('You must be signed in to update projects.');
     }
     try {
       const compressedImages = await enforceImageLimits({
@@ -504,17 +645,24 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         ...(compressedImages.ownerAvatar !== undefined ? { ownerAvatar: compressedImages.ownerAvatar } : {}),
       };
 
-      await updateDoc(doc(db, 'projects', id), {
-        ...payload,
-        updatedAt: serverTimestamp()
-      });
-
       const now = Date.now();
+      if (useRtdbForWrites && rtdbUrlRef.current) {
+        await updateProjectInRtdb(rtdbUrlRef.current, id, {
+          ...payload,
+          updatedAt: now,
+        });
+      } else {
+        await updateDoc(doc(db, 'projects', id), {
+          ...payload,
+          updatedAt: serverTimestamp()
+        });
+      }
+
       setProjects(prev => {
         const updated = prev.map(p => p.id === id ? {
           ...p,
           ...payload,
-          updatedAt: { seconds: Math.floor(now / 1000), nanoseconds: 0 }
+          updatedAt: useRtdbForWrites ? now : { seconds: Math.floor(now / 1000), nanoseconds: 0 }
         } : p);
         setCachedProjectsInIDB(updated);
         return updated;
@@ -522,17 +670,21 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
       showToast(`บันทึกการแก้ไข "${data.title || 'แอปพลิเคชัน'}" เรียบร้อยแล้ว`, 4000);
     } catch (error: any) {
-      if (error?.code === 'permission-denied' || String(error?.message).includes('Missing or insufficient permissions')) {
+      if (!useRtdbForWrites && (error?.code === 'permission-denied' || String(error?.message).includes('Missing or insufficient permissions'))) {
         handleFirestoreError(error, OperationType.UPDATE, `projects/${id}`);
       }
-      console.error("Error updating project", error);
+      console.error('Error updating project', error);
       throw error;
     }
   };
 
   const deleteProject = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'projects', id));
+      if (useRtdbForWrites && rtdbUrlRef.current) {
+        await deleteProjectInRtdb(rtdbUrlRef.current, id);
+      } else {
+        await deleteDoc(doc(db, 'projects', id));
+      }
 
       setProjects(prev => {
         const updated = prev.filter(p => p.id !== id);
@@ -542,10 +694,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
       showToast('ลบแอปพลิเคชันออกจากระบบเรียบร้อยแล้ว', 4000);
     } catch (error: any) {
-      if (error?.code === 'permission-denied' || String(error?.message).includes('Missing or insufficient permissions')) {
+      if (!useRtdbForWrites && (error?.code === 'permission-denied' || String(error?.message).includes('Missing or insufficient permissions'))) {
         handleFirestoreError(error, OperationType.DELETE, `projects/${id}`);
       }
-      console.error("Error deleting project", error);
+      console.error('Error deleting project', error);
     }
   };
 
@@ -577,12 +729,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     });
 
     try {
-      await updateDoc(doc(db, 'projects', id), {
-        votes: newVotes,
-        votedUserIds: newVotedUserIds
-      });
+      if (useRtdbForWrites && rtdbUrlRef.current) {
+        await updateProjectInRtdb(rtdbUrlRef.current, id, {
+          votes: newVotes,
+          votedUserIds: newVotedUserIds
+        });
+      } else {
+        await updateDoc(doc(db, 'projects', id), {
+          votes: newVotes,
+          votedUserIds: newVotedUserIds
+        });
+      }
     } catch (error) {
-      console.warn("Could not sync vote to Firestore:", error);
+      console.warn('Could not sync vote to database:', error);
     }
   };
 
@@ -623,12 +782,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     });
 
     try {
-      await updateDoc(doc(db, 'projects', id), {
-        comments: newCommentsCount,
-        commentsList: updatedCommentsList
-      });
+      if (useRtdbForWrites && rtdbUrlRef.current) {
+        await updateProjectInRtdb(rtdbUrlRef.current, id, {
+          comments: newCommentsCount,
+          commentsList: updatedCommentsList
+        });
+      } else {
+        await updateDoc(doc(db, 'projects', id), {
+          comments: newCommentsCount,
+          commentsList: updatedCommentsList
+        });
+      }
     } catch (error) {
-      console.warn("Could not sync comment to Firestore:", error);
+      console.warn('Could not sync comment to database:', error);
     }
   };
 
@@ -636,14 +802,267 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setBatchOptimizeState(INITIAL_OPTIMIZE_STATE);
   };
 
+  const resetMigrationState = () => {
+    setMigrationState(INITIAL_MIGRATION_STATE);
+  };
+
+  const inspectDatabaseCounts = async (targetUrl?: string): Promise<{
+    firestoreCount: number;
+    rtdbCount: number | null;
+    rtdbError?: string;
+  }> => {
+    let firestoreCount = projects.length;
+    try {
+      const fsSnap = await getDocs(collection(db, 'projects'));
+      firestoreCount = fsSnap.size;
+    } catch {
+      // Fallback to local count if Firestore quota exceeded
+    }
+
+    const normalized = normalizeRtdbUrl(targetUrl || rtdbUrlRef.current);
+    if (!normalized) {
+      return { firestoreCount, rtdbCount: null };
+    }
+
+    try {
+      const rtdbList = await fetchAllProjectsFromRtdb(normalized);
+      return { firestoreCount, rtdbCount: rtdbList.length };
+    } catch (err: any) {
+      return {
+        firestoreCount,
+        rtdbCount: null,
+        rtdbError: err?.message || String(err),
+      };
+    }
+  };
+
   /**
-   * Admin tool: scans all existing Firestore project records, compresses oversized
-   * thumbnails (>35KB or non-WebP), avatars (>10KB or non-WebP), and comment avatars,
-   * then writes only modified documents back to Firestore and refreshes IndexedDB cache.
+   * Admin One-Click Migration: copies every project from Firestore (or fallback/cache if Firestore quota reached)
+   * into Firebase Realtime Database under /projects/{originalId} without deleting anything from Firestore.
+   */
+  const migrateFirestoreToRtdb = async (
+    targetUrl: string,
+    compressDuringMigration: boolean = true
+  ): Promise<{ migratedCount: number; savedBytes: number }> => {
+    if (!isAdmin || !user) {
+      const msg = 'ต้องเข้าสู่ระบบด้วยบัญชี Admin (Mosy_nicky@hotmail.com) เพื่อย้ายฐานข้อมูล';
+      setMigrationState({ ...INITIAL_MIGRATION_STATE, error: msg });
+      throw new Error(msg);
+    }
+
+    const normalizedUrl = normalizeRtdbUrl(targetUrl);
+    if (!normalizedUrl) {
+      const msg = 'URL ของ Realtime Database ไม่ถูกต้อง (ตัวอย่าง: https://gen-lang-client-0975890740-default-rtdb.asia-southeast1.firebasedatabase.app)';
+      setMigrationState({ ...INITIAL_MIGRATION_STATE, error: msg });
+      throw new Error(msg);
+    }
+
+    setMigrationState({
+      isRunning: true,
+      total: 0,
+      processed: 0,
+      migratedCount: 0,
+      compressedCount: 0,
+      savedBytes: 0,
+      currentTitle: 'กำลังอ่านข้อมูลทั้งหมดจาก Firestore...',
+      completed: false,
+      error: null,
+    });
+
+    try {
+      let sourceRecords: Project[] = [];
+      try {
+        const snapshot = await getDocs(collection(db, 'projects'));
+        sourceRecords = snapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data(),
+        })) as Project[];
+      } catch (fsErr) {
+        console.warn('Could not read directly from Firestore, using local IndexedDB cache as source:', fsErr);
+        sourceRecords = projects;
+      }
+
+      if (sourceRecords.length === 0) {
+        sourceRecords = projects;
+      }
+
+      const total = sourceRecords.length;
+      setMigrationState(prev => ({
+        ...prev,
+        total,
+        currentTitle: `พบทั้งหมด ${total} แอป กำลังเตรียมย้ายไป Realtime Database...`,
+      }));
+
+      let migratedCount = 0;
+      let compressedCount = 0;
+      let totalSavedBytes = 0;
+      const migratedList: Project[] = [];
+
+      for (let i = 0; i < sourceRecords.length; i++) {
+        const item = sourceRecords[i];
+        const title = item.title || item.id;
+
+        setMigrationState(prev => ({
+          ...prev,
+          processed: i,
+          currentTitle: title,
+        }));
+
+        let nextThumb = item.thumbnail || '';
+        let nextAvatar = item.ownerAvatar || '';
+        let nextComments = item.commentsList;
+        let itemCompressed = false;
+
+        if (compressDuringMigration) {
+          if (nextThumb && needsImageOptimization(nextThumb, THUMBNAIL_COMPRESS_OPTIONS.maxSizeBytes)) {
+            try {
+              const before = getDataUrlByteSize(nextThumb);
+              const compressed = await compressImage(nextThumb, THUMBNAIL_COMPRESS_OPTIONS);
+              const after = getDataUrlByteSize(compressed);
+              if (compressed !== nextThumb && (!nextThumb.startsWith('data:') || after <= before)) {
+                totalSavedBytes += Math.max(0, before - after);
+                nextThumb = compressed;
+                itemCompressed = true;
+              }
+            } catch {
+              // keep original
+            }
+          }
+
+          if (nextAvatar && needsImageOptimization(nextAvatar, AVATAR_COMPRESS_OPTIONS.maxSizeBytes)) {
+            try {
+              const before = getDataUrlByteSize(nextAvatar);
+              const compressed = await compressImage(nextAvatar, AVATAR_COMPRESS_OPTIONS);
+              const after = getDataUrlByteSize(compressed);
+              if (compressed !== nextAvatar && (!nextAvatar.startsWith('data:') || after <= before)) {
+                totalSavedBytes += Math.max(0, before - after);
+                nextAvatar = compressed;
+                itemCompressed = true;
+              }
+            } catch {
+              // keep original
+            }
+          }
+
+          if (Array.isArray(nextComments) && nextComments.length > 0) {
+            nextComments = await Promise.all(
+              nextComments.map(async c => {
+                if (c.userAvatar && c.userAvatar.startsWith('data:image/') && needsImageOptimization(c.userAvatar, AVATAR_COMPRESS_OPTIONS.maxSizeBytes)) {
+                  try {
+                    const before = getDataUrlByteSize(c.userAvatar);
+                    const compressed = await compressImage(c.userAvatar, AVATAR_COMPRESS_OPTIONS);
+                    const after = getDataUrlByteSize(compressed);
+                    if (compressed !== c.userAvatar && after <= before) {
+                      totalSavedBytes += Math.max(0, before - after);
+                      itemCompressed = true;
+                      return { ...c, userAvatar: compressed };
+                    }
+                  } catch {
+                    // keep original
+                  }
+                }
+                return c;
+              })
+            );
+          }
+        }
+
+        if (itemCompressed) {
+          compressedCount += 1;
+        }
+
+        const createdMs = normalizeTimestampToMs(item.createdAt);
+        const updatedMs = normalizeTimestampToMs(item.updatedAt ?? createdMs);
+
+        const rtdbPayload: Project = {
+          ...item,
+          thumbnail: nextThumb,
+          ownerAvatar: nextAvatar,
+          ...(nextComments !== undefined ? { commentsList: nextComments } : {}),
+          votes: typeof item.votes === 'number' ? item.votes : 0,
+          comments: typeof item.comments === 'number' ? item.comments : (nextComments?.length ?? 0),
+          favoriteCount: typeof item.favoriteCount === 'number' ? item.favoriteCount : 0,
+          votedUserIds: Array.isArray(item.votedUserIds) ? item.votedUserIds : [],
+          favoritedUserIds: Array.isArray(item.favoritedUserIds) ? item.favoritedUserIds : [],
+          createdAt: createdMs,
+          updatedAt: updatedMs,
+        };
+
+        await writeProjectWithIdInRtdb(normalizedUrl, item.id, rtdbPayload);
+        migratedCount += 1;
+        migratedList.push(rtdbPayload);
+
+        setMigrationState(prev => ({
+          ...prev,
+          processed: i + 1,
+          migratedCount,
+          compressedCount,
+          savedBytes: totalSavedBytes,
+        }));
+      }
+
+      // Persist RTDB URL across localStorage, IndexedDB, and shared Firestore config doc
+      saveLocalRtdbUrl(normalizedUrl);
+      rtdbUrlRef.current = normalizedUrl;
+      setRtdbUrl(normalizedUrl);
+      setActiveDataSource('rtdb');
+
+      try {
+        await saveRtdbUrlToConfigDoc(normalizedUrl);
+      } catch (cfgErr) {
+        console.warn('Saved RTDB URL locally; shared config/rtdb write notice:', cfgErr);
+      }
+
+      migratedList.sort((a, b) => normalizeTimestampToMs(b.createdAt) - normalizeTimestampToMs(a.createdAt));
+      setProjects(migratedList);
+      await setCachedProjectsInIDB(migratedList);
+
+      const now = Date.now();
+      cacheMetaRef.current = await updateCacheMetaInIDB({
+        lastFetchTime: now,
+        quotaBlockedUntil: null,
+        rtdbUrl: normalizedUrl,
+        dataSource: 'rtdb',
+      });
+      setLastSyncedAt(new Date(now));
+      setIsQuotaExceeded(false);
+
+      setMigrationState({
+        isRunning: false,
+        total,
+        processed: total,
+        migratedCount,
+        compressedCount,
+        savedBytes: totalSavedBytes,
+        currentTitle: 'ย้ายข้อมูลเข้า Realtime Database สำเร็จสมบูรณ์!',
+        completed: true,
+        error: null,
+      });
+
+      showToast(`🚀 ย้าย ${migratedCount} แอปไปยัง Realtime Database สำเร็จแล้ว (ข้อมูลเดิมใน Firestore ยังอยู่ครบ)`, 6000);
+      return { migratedCount, savedBytes: totalSavedBytes };
+    } catch (error: any) {
+      const rawMsg = error?.message || String(error);
+      const friendlyMsg = rawMsg.toLowerCase().includes('permission')
+        ? 'สิทธิ์การเขียน Realtime Database ถูกปฏิเสธ — กรุณาวาง database.rules.json ใน Firebase Console > Realtime Database > Rules แล้วกด Publish ก่อนนะครับ'
+        : rawMsg;
+
+      setMigrationState(prev => ({
+        ...prev,
+        isRunning: false,
+        completed: false,
+        error: friendlyMsg,
+      }));
+      throw error;
+    }
+  };
+
+  /**
+   * Admin tool: optimizes oversized images in the active database (RTDB if active, otherwise Firestore).
    */
   const batchOptimizeFirestoreImages = async (): Promise<{ updatedCount: number; savedBytes: number }> => {
     if (!isAdmin || !user) {
-      const msg = 'ต้องเข้าสู่ระบบด้วยบัญชี Admin (Mosy_nicky@hotmail.com) เพื่อแก้ไขข้อมูลทั้งหมดใน Firebase';
+      const msg = 'ต้องเข้าสู่ระบบด้วยบัญชี Admin (Mosy_nicky@hotmail.com) เพื่อแก้ไขข้อมูลทั้งหมดในฐานข้อมูล';
       setBatchOptimizeState({
         ...INITIAL_OPTIMIZE_STATE,
         error: msg,
@@ -651,22 +1070,32 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       throw new Error(msg);
     }
 
+    const isRtdb = Boolean(rtdbUrlRef.current && activeDataSource === 'rtdb');
+
     setBatchOptimizeState({
       isRunning: true,
       total: 0,
       processed: 0,
       updatedCount: 0,
       savedBytes: 0,
-      currentTitle: 'กำลังดึงรายการแอปทั้งหมดจาก Firestore...',
+      currentTitle: isRtdb ? 'กำลังดึงรายการแอปทั้งหมดจาก Realtime Database...' : 'กำลังดึงรายการแอปทั้งหมดจาก Firestore...',
       completed: false,
       error: null,
     });
 
     try {
-      const snapshot = await getDocs(collection(db, 'projects'));
-      const docs = snapshot.docs;
-      const total = docs.length;
+      let sourceProjects: Project[] = [];
+      if (isRtdb && rtdbUrlRef.current) {
+        sourceProjects = await fetchAllProjectsFromRtdb(rtdbUrlRef.current);
+      } else {
+        const snapshot = await getDocs(collection(db, 'projects'));
+        sourceProjects = snapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data()
+        })) as Project[];
+      }
 
+      const total = sourceProjects.length;
       setBatchOptimizeState(prev => ({
         ...prev,
         total,
@@ -677,10 +1106,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       let totalSavedBytes = 0;
       const updatedMap = new Map<string, Project>();
 
-      for (let i = 0; i < docs.length; i++) {
-        const docSnap = docs[i];
-        const data = docSnap.data() as Omit<Project, 'id'>;
-        const title = data.title || docSnap.id;
+      for (let i = 0; i < sourceProjects.length; i++) {
+        const data = sourceProjects[i];
+        const title = data.title || data.id;
 
         setBatchOptimizeState(prev => ({
           ...prev,
@@ -691,14 +1119,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         const patch: Partial<Project> = {};
         let docSavedBytes = 0;
 
-        // 1. Check & compress thumbnail
         if (data.thumbnail && needsImageOptimization(data.thumbnail, THUMBNAIL_COMPRESS_OPTIONS.maxSizeBytes)) {
           try {
             const beforeBytes = getDataUrlByteSize(data.thumbnail);
             const compressedThumb = await compressImage(data.thumbnail, THUMBNAIL_COMPRESS_OPTIONS);
             if (compressedThumb && compressedThumb !== data.thumbnail) {
               const afterBytes = getDataUrlByteSize(compressedThumb);
-              // Only update if remote URL normalized OR base64 got smaller / converted to WebP
               if (!data.thumbnail.startsWith('data:') || afterBytes <= beforeBytes || !data.thumbnail.startsWith('data:image/webp')) {
                 patch.thumbnail = compressedThumb;
                 docSavedBytes += Math.max(0, beforeBytes - afterBytes);
@@ -709,7 +1135,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // 2. Check & compress ownerAvatar
         if (data.ownerAvatar && needsImageOptimization(data.ownerAvatar, AVATAR_COMPRESS_OPTIONS.maxSizeBytes)) {
           try {
             const beforeBytes = getDataUrlByteSize(data.ownerAvatar);
@@ -726,7 +1151,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // 3. Check & compress comment avatars if any are Data URLs
         if (Array.isArray(data.commentsList) && data.commentsList.length > 0) {
           let commentsChanged = false;
           const nextComments = await Promise.all(
@@ -754,28 +1178,34 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }
 
         const mergedProject: Project = {
-          id: docSnap.id,
           ...data,
           ...patch,
         };
 
         if (Object.keys(patch).length > 0) {
-          try {
-            await updateDoc(doc(db, 'projects', docSnap.id), {
+          if (isRtdb && rtdbUrlRef.current) {
+            await updateProjectInRtdb(rtdbUrlRef.current, data.id, {
               ...patch,
-              updatedAt: serverTimestamp(),
+              updatedAt: Date.now(),
             });
-            updatedCount += 1;
-            totalSavedBytes += docSavedBytes;
-          } catch (err: any) {
-            if (err?.code === 'permission-denied' || String(err?.message).includes('Missing or insufficient permissions')) {
-              handleFirestoreError(err, OperationType.UPDATE, `projects/${docSnap.id}`);
+          } else {
+            try {
+              await updateDoc(doc(db, 'projects', data.id), {
+                ...patch,
+                updatedAt: serverTimestamp(),
+              });
+            } catch (err: any) {
+              if (err?.code === 'permission-denied' || String(err?.message).includes('Missing or insufficient permissions')) {
+                handleFirestoreError(err, OperationType.UPDATE, `projects/${data.id}`);
+              }
+              throw err;
             }
-            throw err;
           }
+          updatedCount += 1;
+          totalSavedBytes += docSavedBytes;
         }
 
-        updatedMap.set(docSnap.id, mergedProject);
+        updatedMap.set(data.id, mergedProject);
 
         setBatchOptimizeState(prev => ({
           ...prev,
@@ -785,12 +1215,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }));
       }
 
-      // Sync updated list directly to state & IndexedDB cache (saves an extra Firestore read)
-      const allProjects = Array.from(updatedMap.values()).sort((a, b) => {
-        const secA = a.createdAt?.seconds ?? (a.createdAt ? new Date(a.createdAt).getTime() / 1000 : 0);
-        const secB = b.createdAt?.seconds ?? (b.createdAt ? new Date(b.createdAt).getTime() / 1000 : 0);
-        return secB - secA;
-      });
+      const allProjects = Array.from(updatedMap.values()).sort(
+        (a, b) => normalizeTimestampToMs(b.createdAt) - normalizeTimestampToMs(a.createdAt)
+      );
 
       if (allProjects.length > 0) {
         setProjects(allProjects);
@@ -817,14 +1244,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const savedKB = (totalSavedBytes / 1024).toFixed(1);
       showToast(
         updatedCount > 0
-          ? `✨ บีบอัดรูปใน Firebase สำเร็จ ${updatedCount} แอป (ประหยัดพื้นที่ ${savedKB} KB)`
-          : '✅ รูปภาพทั้งหมดใน Firebase มีขนาดเล็กสุดตามเกณฑ์อยู่แล้ว',
+          ? `✨ บีบอัดรูปสำเร็จ ${updatedCount} แอป (ประหยัดพื้นที่ ${savedKB} KB)`
+          : '✅ รูปภาพทั้งหมดมีขนาดเล็กสุดตามเกณฑ์อยู่แล้ว',
         5500
       );
 
       return { updatedCount, savedBytes: totalSavedBytes };
     } catch (error: any) {
-      const msg = error?.message || 'เกิดข้อผิดพลาดระหว่างบีบอัดข้อมูลใน Firebase';
+      const msg = error?.message || 'เกิดข้อผิดพลาดระหว่างบีบอัดข้อมูล';
       setBatchOptimizeState(prev => ({
         ...prev,
         isRunning: false,
@@ -849,6 +1276,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setIsModalOpen,
       isOptimizerModalOpen,
       setIsOptimizerModalOpen,
+      isMigrationModalOpen,
+      setIsMigrationModalOpen,
       isAdmin,
       setIsAdmin,
       searchQuery,
@@ -876,6 +1305,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       batchOptimizeState,
       batchOptimizeFirestoreImages,
       resetBatchOptimizeState,
+      rtdbUrl,
+      activeDataSource,
+      migrationState,
+      migrateFirestoreToRtdb,
+      resetMigrationState,
+      inspectDatabaseCounts,
     }}>
       {children}
     </ProjectContext.Provider>

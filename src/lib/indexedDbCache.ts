@@ -19,6 +19,8 @@ const LEGACY_LS_QUOTA_BLOCKED = 'gcmp_quota_blocked_until';
 export interface CacheMeta {
   lastFetchTime: number | null;
   quotaBlockedUntil: number | null;
+  rtdbUrl?: string | null;
+  dataSource?: 'rtdb' | 'firestore' | 'fallback';
 }
 
 let dbPromise: Promise<IDBDatabase> | null = null;

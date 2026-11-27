@@ -1,0 +1,35 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "projects": {
+      ".read": true,
+      ".indexOn": ["createdAt", "ownerId", "category"],
+      "$projectId": {
+        ".write": "auth != null && (auth.token.email == 'Mosy_nicky@hotmail.com' || auth.token.email == 'mosy_nicky@hotmail.com' || (!data.exists() && newData.child('ownerId').val() == auth.uid) || (data.exists() && data.child('ownerId').val() == auth.uid))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['title', 'team', 'category', 'description', 'ownerId']) && newData.child('title').isString() && newData.child('title').val().length <= 200 && newData.child('team').isString() && newData.child('team').val().length <= 100 && newData.child('category').isString() && newData.child('category').val().length <= 20 && newData.child('description').isString() && newData.child('description').val().length <= 5000)",
+        "votes": {
+          ".write": true,
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "votedUserIds": {
+          ".write": true
+        },
+        "favoriteCount": {
+          ".write": true,
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "favoritedUserIds": {
+          ".write": true
+        },
+        "comments": {
+          ".write": "auth != null",
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "commentsList": {
+          ".write": "auth != null"
+        }
+      }
+    }
+  }
+}

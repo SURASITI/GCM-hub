@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Bell, Search, Shield, ShieldAlert, LogIn, LogOut, Loader2, Menu, Share2, RotateCw, ImageDown } from 'lucide-react';
+import { Bell, Search, Shield, ShieldAlert, LogIn, LogOut, Loader2, Menu, Share2, RotateCw, ImageDown, ArrowRightLeft } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 import ShareQRModal from './ShareQRModal';
 import { useState } from 'react';
@@ -23,7 +23,9 @@ export default function TopBar() {
     refreshProjects,
     isRefreshing,
     lastSyncedAt,
-    setIsOptimizerModalOpen
+    setIsOptimizerModalOpen,
+    setIsMigrationModalOpen,
+    activeDataSource
   } = useProjects();
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -75,12 +77,20 @@ export default function TopBar() {
         {isAdmin && (
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsMigrationModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-200/70 transition-colors"
+              title={`ย้าย/เชื่อมต่อ Realtime Database (ปัจจุบัน: ${activeDataSource === 'rtdb' ? 'RTDB' : 'Firestore'})`}
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{activeDataSource === 'rtdb' ? 'RTDB Active' : 'ย้ายไป RTDB'}</span>
+            </button>
+            <button
               onClick={() => setIsOptimizerModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
-              title="บีบอัดรูปภาพทั้งหมดใน Firebase ให้เป็น WebP ขนาดเล็กสุด"
+              title="บีบอัดรูปภาพทั้งหมดในฐานข้อมูลให้เป็น WebP ขนาดเล็กสุด"
             >
               <ImageDown className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">บีบอัดรูป Firebase</span>
+              <span className="hidden sm:inline">บีบอัดรูป</span>
             </button>
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
               <ShieldAlert className="w-3.5 h-3.5" />

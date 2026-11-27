@@ -16,7 +16,7 @@ service cloud.firestore {
     
     // Admin check - Using email from runtime metadata
     function isAdmin() { 
-      return isSignedIn() && request.auth.token.email == 'Mosy_nicky@hotmail.com';
+      return isSignedIn() && request.auth.token.email in ['Mosy_nicky@hotmail.com', 'mosy_nicky@hotmail.com'];
     }
 
     // --- Entity Validations ---
@@ -83,6 +83,12 @@ service cloud.firestore {
     // Persistence for admin/test connection
     match /test/connection {
       allow read: if true;
+    }
+
+    // Shared RTDB endpoint config (written only by Admin during migration)
+    match /config/rtdb {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
